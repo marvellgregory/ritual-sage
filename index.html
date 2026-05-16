@@ -856,7 +856,7 @@ function shareChampion(){
 // REAL CONTRACT MINTING — Ritual Chain Testnet
 // Contract: 0x91C21715Aea828c6EB05C7220C20512f97262918
 // ═══════════════════════════════════════════
-const CONTRACT_ADDRESS = '0x91C21715Aea828c6EB05C7220C20512f97262918';
+const CONTRACT_ADDRESS = '0x999c41a582708522A7651B70Cb0ad310E385108f';
 const RITUAL_CHAIN_ID = '0x7BB'; // 1979 in hex
 const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
 
@@ -866,6 +866,16 @@ const MINT_ABI = [
     "name":"mint",
     "outputs":[],
     "stateMutability":"nonpayable",
+    "type":"function"
+  },
+  {
+    "inputs":[
+      {"internalType":"address","name":"user","type":"address"},
+      {"internalType":"uint256","name":"tierId","type":"uint256"}
+    ],
+    "name":"checkMinted",
+    "outputs":[{"internalType":"bool","name":"","type":"bool"}],
+    "stateMutability":"view",
     "type":"function"
   },
   {
