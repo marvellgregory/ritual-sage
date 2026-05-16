@@ -852,15 +852,118 @@ function shareChampion(){
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
+// ═══════════════════════════════════════════
+// REAL CONTRACT MINTING — Ritual Chain Testnet
+// Contract: 0x91C21715Aea828c6EB05C7220C20512f97262918
+// ═══════════════════════════════════════════
+const CONTRACT_ADDRESS = '0x91C21715Aea828c6EB05C7220C20512f97262918';
+const RITUAL_CHAIN_ID = '0x7BB'; // 1979 in hex
+const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
+
+const MINT_ABI = [
+  {
+    "inputs":[{"internalType":"uint256","name":"tierId","type":"uint256"}],
+    "name":"mint",
+    "outputs":[],
+    "stateMutability":"nonpayable",
+    "type":"function"
+  },
+  {
+    "inputs":[
+      {"internalType":"address","name":"","type":"address"},
+      {"internalType":"uint256","name":"","type":"uint256"}
+    ],
+    "name":"hasMinted",
+    "outputs":[{"internalType":"bool","name":"","type":"bool"}],
+    "stateMutability":"view",
+    "type":"function"
+  }
+];
+
+function encodeMintCall(tierId){
+  // keccak256("mint(uint256)") = 0x1249c58b, then pad tierId to 32 bytes
+  const sig = '0x1249c58b';
+  const padded = tierId.toString(16).padStart(64,'0');
+  return sig + padded;
+}
+
+async function switchToRitual(){
+  try{
+    await window.ethereum.request({
+      method:'wallet_switchEthereumChain',
+      params:[{chainId: RITUAL_CHAIN_ID}]
+    });
+    return true;
+  }catch(switchErr){
+    // Chain not added yet — add it
+    if(switchErr.code===4902){
+      try{
+        await window.ethereum.request({
+          method:'wallet_addEthereumChain',
+          params:[{
+            chainId: RITUAL_CHAIN_ID,
+            chainName: 'Ritual Chain',
+            nativeCurrency:{name:'RITUAL',symbol:'RITUAL',decimals:18},
+            rpcUrls:[RITUAL_RPC],
+            blockExplorerUrls:['https://explorer.ritualfoundation.org']
+          }]
+        });
+        return true;
+      }catch(addErr){
+        showToast('Could not add Ritual Chain to wallet');
+        return false;
+      }
+    }
+    showToast('Please switch to Ritual Chain in your wallet');
+    return false;
+  }
+}
+
 async function mintCert(){
   if(!state.walletAddr){
     showToast('Connect your wallet first to mint!');
     return;
   }
-  const tier=TIERS[state.currentTier];
-  showToast(`${tier.icon} Minting ${tier.name} POAP... (Demo: actual mint requires deployed contract)`);
-  // In production: call your deployed smart contract here
-  // Example: await contract.mint(state.walletAddr, state.currentTier, state.score)
+  const tier = TIERS[state.currentTier];
+  const tierId = state.currentTier + 1; // 1-indexed
+
+  showToast(`${tier.icon} Preparing to mint ${tier.name} POAP...`);
+
+  try{
+    // Switch to Ritual Chain
+    const switched = await switchToRitual();
+    if(!switched) return;
+
+    // Send mint transaction
+    const data = encodeMintCall(tierId);
+    const txHash = await window.ethereum.request({
+      method:'eth_sendTransaction',
+      params:[{
+        from: state.walletAddr,
+        to: CONTRACT_ADDRESS,
+        data: data,
+        gas: '0x30D40' // 200000 gas
+      }]
+    });
+
+    showToast(`${tier.icon} Minting ${tier.name} POAP! Tx: ${txHash.slice(0,10)}...`);
+
+    // Open explorer after short delay
+    setTimeout(()=>{
+      const explorerUrl = `https://explorer.ritualfoundation.org/tx/${txHash}`;
+      const confirmed = confirm(`✅ ${tier.name} POAP minted!\n\nView on Ritual Explorer?\n${txHash.slice(0,20)}...`);
+      if(confirmed) window.open(explorerUrl, '_blank');
+    }, 2000);
+
+  }catch(err){
+    if(err.code===4001){
+      showToast('Mint cancelled by user');
+    } else if(err.message && err.message.includes('Already minted')){
+      showToast(`You already minted this ${tier.name} POAP! Each tier is mintable once.`);
+    } else {
+      showToast(`Mint error: ${err.message ? err.message.slice(0,60) : 'Unknown error'}`);
+    }
+  }
 }
 
 async function mintChampion(){
@@ -868,7 +971,41 @@ async function mintChampion(){
     showToast('Connect your wallet first to mint!');
     return;
   }
-  showToast('🌟 Minting Grand Ritualist POAP... (Demo: actual mint requires deployed contract)');
+  const tierId = 4; // Grand Ritualist = tier 4
+  showToast('🌟 Preparing Grand Ritualist POAP mint...');
+
+  try{
+    const switched = await switchToRitual();
+    if(!switched) return;
+
+    const data = encodeMintCall(tierId);
+    const txHash = await window.ethereum.request({
+      method:'eth_sendTransaction',
+      params:[{
+        from: state.walletAddr,
+        to: CONTRACT_ADDRESS,
+        data: data,
+        gas: '0x30D40'
+      }]
+    });
+
+    showToast(`🌟 Grand Ritualist POAP minted! Tx: ${txHash.slice(0,10)}...`);
+
+    setTimeout(()=>{
+      const explorerUrl = `https://explorer.ritualfoundation.org/tx/${txHash}`;
+      const confirmed = confirm(`🌟 GRAND RITUALIST POAP minted!\n\nYou are a true master of Ritual.\nView on Ritual Explorer?\n${txHash.slice(0,20)}...`);
+      if(confirmed) window.open(explorerUrl, '_blank');
+    }, 2000);
+
+  }catch(err){
+    if(err.code===4001){
+      showToast('Mint cancelled by user');
+    } else if(err.message && err.message.includes('Already minted')){
+      showToast('You already minted the Grand Ritualist POAP!');
+    } else {
+      showToast(`Mint error: ${err.message ? err.message.slice(0,60) : 'Unknown error'}`);
+    }
+  }
 }
 
 function nextTier(){
