@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Ritual Sage — Test Your Onchain AI Knowledge</title>
+<meta name="description" content="Prove your Ritual knowledge. 4 tiers. Mint your certificate. Share on X."/>
+<meta property="og:title" content="The Ritual Sage"/>
+<meta property="og:description" content="4-tier Ritual knowledge quiz. Earn your Sage certificate onchain."/>
+<meta property="og:image" content="https://ritual.net/og.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+:root{
+  --bg:#050510;
+  --surface:#0c0c22;
+  --card:#111130;
+  --border:#1e1e4a;
+  --green:#00ff7f;
+  --purple:#7c3aed;
+  --purple2:#a855f7;
+  --gold:#f59e0b;
+  --red:#ef4444;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --glow-green:0 0 20px rgba(0,255,127,0.4);
+  --glow-purple:0 0 20px rgba(124,58,237,0.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Animated bg */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(124,58,237,0.15) 0%,transparent 70%),
+             radial-gradient(ellipse 60% 40% at 80% 80%,rgba(0,255,127,0.08) 0%,transparent 60%);
+  pointer-events:none;
+}
+
+/* Stars */
+.stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) var(--delay,0s) infinite alternate}
+@keyframes twinkle{0%{opacity:0.1;transform:scale(1)}100%{opacity:0.8;transform:scale(1.3)}}
+
+/* Layout */
+#app{position:relative;z-index:1;min-height:100vh}
+.screen{display:none;min-height:100vh;padding:20px}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+/* ──────────── WELCOME SCREEN ──────────── */
+.logo-wrap{text-align:center;margin-bottom:32px}
+.logo-emblem{
+  width:100px;height:100px;margin:0 auto 16px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;
+  box-shadow:var(--glow-purple),var(--glow-green);
+  animation:pulse-orb 3s ease-in-out infinite;
+}
+@keyframes pulse-orb{0%,100%{box-shadow:0 0 20px rgba(124,58,237,0.5),0 0 40px rgba(0,255,127,0.2)}50%{box-shadow:0 0 40px rgba(124,58,237,0.8),0 0 80px rgba(0,255,127,0.4)}}
+.logo-title{
+  font-family:'Cinzel',serif;font-size:clamp(32px,6vw,56px);font-weight:900;
+  background:linear-gradient(135deg,var(--green) 0%,var(--purple2) 60%,var(--gold) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:3px;line-height:1.1;
+}
+.logo-sub{color:var(--muted);font-size:14px;letter-spacing:4px;text-transform:uppercase;margin-top:6px}
+
+.welcome-card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:32px;max-width:560px;width:100%;
+  box-shadow:0 0 60px rgba(124,58,237,0.1);
+}
+
+/* Tiers preview */
+.tiers-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}
+.tier-chip{
+  border-radius:12px;padding:14px;text-align:center;
+  border:1px solid;position:relative;overflow:hidden;
+  transition:transform 0.2s;cursor:default;
+}
+.tier-chip:hover{transform:translateY(-2px)}
+.tier-chip.t1{border-color:#22c55e33;background:linear-gradient(135deg,#052e1610,#052e16)}
+.tier-chip.t2{border-color:#3b82f633;background:linear-gradient(135deg,#172554 10,#172554)}
+.tier-chip.t3{border-color:#a855f733;background:linear-gradient(135deg,#2e1065 10,#2e1065)}
+.tier-chip.t4{border-color:#f59e0b33;background:linear-gradient(135deg,#451a03 10,#451a03)}
+.tier-chip-icon{font-size:24px;margin-bottom:4px}
+.tier-chip-name{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px}
+.tier-chip-q{font-size:11px;color:var(--muted)}
+
+/* Input */
+.field-label{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field-input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Rajdhani',sans-serif;
+  font-size:16px;transition:border-color 0.2s,box-shadow 0.2s;outline:none;
+}
+.field-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,255,127,0.1)}
+.field-input::placeholder{color:var(--muted)}
+
+/* Wallet section */
+.wallet-section{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin-bottom:20px;
+}
+.wallet-status{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.connected{background:var(--green);box-shadow:0 0 8px var(--green)}
+.wallet-addr{font-family:'Space Mono',monospace;font-size:12px;color:var(--green)}
+
+/* Buttons */
+.btn{
+  border:none;border-radius:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;
+  font-weight:700;font-size:16px;letter-spacing:1px;text-transform:uppercase;
+  transition:all 0.2s;padding:14px 28px;width:100%;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--green),#00cc66);
+  color:#000;box-shadow:0 4px 20px rgba(0,255,127,0.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,127,0.5)}
+.btn-primary:active{transform:translateY(0)}
+.btn-secondary{
+  background:transparent;color:var(--green);
+  border:1px solid var(--green);
+}
+.btn-secondary:hover{background:rgba(0,255,127,0.08)}
+.btn-wallet{
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.3);
+  padding:10px 20px;font-size:14px;width:auto;
+}
+.btn-wallet:hover{transform:translateY(-1px);box-shadow:0 6px 25px rgba(124,58,237,0.5)}
+.btn-small{padding:8px 16px;font-size:13px;width:auto}
+
+/* X Profile display */
+.x-profile{
+  display:none;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid #1da1f233;
+  border-radius:12px;padding:14px;margin-bottom:16px;
+}
+.x-avatar{width:48px;height:48px;border-radius:50%;border:2px solid #1da1f2;object-fit:cover}
+.x-name{font-weight:700;font-size:16px}
+.x-handle{color:#1da1f2;font-size:13px}
+
+/* ──────────── QUIZ SCREEN ──────────── */
+.quiz-header{
+  width:100%;max-width:640px;margin-bottom:24px;
+}
+.tier-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:100px;font-size:13px;
+  font-family:'Cinzel',serif;font-weight:700;letter-spacing:1px;
+  margin-bottom:12px;
+}
+.progress-bar{background:var(--border);border-radius:100px;height:6px;overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;border-radius:100px;transition:width 0.4s ease;background:linear-gradient(90deg,var(--green),var(--purple2))}
+.progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+
+.question-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:32px;max-width:640px;width:100%;
+  box-shadow:0 0 40px rgba(0,0,0,0.5);
+}
+.question-num{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.question-text{
+  font-family:'Cinzel',serif;font-size:clamp(16px,3vw,22px);
+  font-weight:700;line-height:1.5;margin-bottom:28px;color:#fff;
+}
+
+.options{display:grid;gap:12px}
+.option-btn{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:16px 20px;text-align:left;
+  cursor:pointer;transition:all 0.2s;
+  font-family:'Rajdhani',sans-serif;font-size:16px;color:var(--text);
+  display:flex;align-items:center;gap:14px;
+}
+.option-btn:hover:not(:disabled){border-color:var(--purple);background:rgba(124,58,237,0.08);transform:translateX(4px)}
+.option-letter{
+  width:32px;height:32px;border-radius:8px;background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:13px;font-weight:700;
+  flex-shrink:0;
+}
+.option-btn.correct{border-color:var(--green)!important;background:rgba(0,255,127,0.1)!important;color:var(--green)}
+.option-btn.correct .option-letter{background:var(--green);color:#000}
+.option-btn.wrong{border-color:var(--red)!important;background:rgba(239,68,68,0.1)!important;color:var(--red)}
+.option-btn.wrong .option-letter{background:var(--red);color:#fff}
+.option-btn:disabled{cursor:default;transform:none!important}
+
+.feedback-box{
+  display:none;margin-top:20px;padding:14px 18px;
+  border-radius:12px;font-size:14px;line-height:1.5;
+}
+.feedback-box.show{display:block}
+.feedback-box.correct-fb{background:rgba(0,255,127,0.08);border:1px solid rgba(0,255,127,0.2);color:var(--green)}
+.feedback-box.wrong-fb{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#fca5a5}
+
+.next-btn{
+  margin-top:20px;display:none;
+}
+
+/* Score bar in quiz */
+.live-score{
+  display:flex;gap:6px;margin-top:8px;
+}
+.score-dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--border);transition:all 0.3s}
+.score-dot.correct{background:var(--green);border-color:var(--green);box-shadow:0 0 6px var(--green)}
+.score-dot.wrong{background:var(--red);border-color:var(--red)}
+
+/* ──────────── TIER RESULT SCREEN ──────────── */
+.result-card{
+  background:var(--card);border-radius:24px;padding:36px;
+  max-width:580px;width:100%;text-align:center;position:relative;overflow:hidden;
+}
+.result-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(124,58,237,0.15),transparent);
+  pointer-events:none;
+}
+
+/* Certificate */
+.cert-outer{
+  border-radius:16px;padding:3px;margin-bottom:24px;
+  background:linear-gradient(135deg,var(--green),var(--purple2),var(--gold));
+}
+.cert-inner{
+  background:var(--bg);border-radius:13px;padding:28px;
+}
+.cert-ritlogo{font-size:32px;margin-bottom:8px}
+.cert-headline{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
+.cert-name{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:4px}
+.cert-tier-name{
+  font-family:'Cinzel',serif;font-size:18px;font-weight:700;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--green),var(--purple2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.cert-score{
+  display:inline-block;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 20px;font-family:'Space Mono',monospace;
+  font-size:13px;color:var(--muted);margin-bottom:12px;
+}
+.cert-seal{
+  width:60px;height:60px;border-radius:50%;margin:8px auto;
+  background:linear-gradient(135deg,var(--gold),#d97706);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;
+  box-shadow:0 0 20px rgba(245,158,11,0.4);
+}
+.cert-date{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:8px}
+
+.result-actions{display:flex;flex-direction:column;gap:12px}
+.share-text{font-size:13px;color:var(--muted);background:var(--surface);border-radius:8px;padding:10px 12px;text-align:left;line-height:1.5;word-break:break-word}
+
+/* Pass/Fail state */
+.fail-msg{
+  background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
+  border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;
+}
+.fail-msg h3{color:var(--red);font-family:'Cinzel',serif;font-size:18px;margin-bottom:8px}
+.fail-msg p{color:#fca5a5;font-size:14px;line-height:1.5}
+
+/* ──────────── HALL OF TIERS ──────────── */
+.tier-progress-display{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;max-width:560px;width:100%}
+.tier-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;
+  text-align:center;transition:all 0.3s;
+}
+.tier-card.unlocked{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,127,0.1)}
+.tier-card.locked{opacity:0.4}
+.tier-card-icon{font-size:32px;margin-bottom:8px}
+.tier-card-name{font-family:'Cinzel',serif;font-size:14px;font-weight:700;margin-bottom:4px}
+.tier-card-status{font-size:12px;color:var(--muted)}
+.tier-card.unlocked .tier-card-status{color:var(--green)}
+
+/* ──────────── FINAL CHAMPION ──────────── */
+.champion-badge{
+  width:120px;height:120px;border-radius:50%;margin:0 auto 20px;
+  background:linear-gradient(135deg,var(--gold),#d97706,var(--purple2));
+  display:flex;align-items:center;justify-content:center;font-size:56px;
+  box-shadow:0 0 40px rgba(245,158,11,0.5),0 0 80px rgba(124,58,237,0.3);
+  animation:pulse-orb 2s ease-in-out infinite;
+}
+
+/* ──────────── UTILITIES ──────────── */
+.text-center{text-align:center}
+.mt-8{margin-top:8px}
+.mt-16{margin-top:16px}
+.mt-24{margin-top:24px}
+.mb-8{margin-bottom:8px}
+.mb-16{margin-bottom:16px}
+.gap-12{gap:12px}
+.flex{display:flex}
+.flex-col{flex-direction:column}
+.items-center{align-items:center}
+.justify-between{justify-content:space-between}
+.w-full{width:100%}
+
+h1.big{font-family:'Cinzel',serif;font-size:clamp(24px,5vw,40px);font-weight:900;line-height:1.2}
+h2.mid{font-family:'Cinzel',serif;font-size:clamp(18px,3.5vw,28px);font-weight:700}
+p.sub{color:var(--muted);font-size:15px;line-height:1.6}
+
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* Notification toast */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--card);border:1px solid var(--green);border-radius:12px;
+  padding:14px 20px;font-size:14px;color:var(--green);
+  transform:translateY(80px);opacity:0;transition:all 0.3s;pointer-events:none;
+  max-width:300px;box-shadow:0 8px 30px rgba(0,0,0,0.4);
+}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* Spinner */
+.spinner{
+  width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--green);
+  border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:500px){
+  .tiers-preview{grid-template-columns:1fr 1fr}
+  .tier-progress-display{grid-template-columns:1fr 1fr}
+  .question-card{padding:20px}
+  .result-card{padding:22px}
+  .cert-inner{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<div id="app">
+
+<!-- ══════════════ SCREEN: WELCOME ══════════════ -->
+<div class="screen active" id="screen-welcome">
+  <div class="logo-wrap">
+    <div class="logo-emblem">🔮</div>
+    <div class="logo-title">The Ritual Sage</div>
+    <div class="logo-sub">Onchain AI Knowledge · 4 Tiers · Mint Your Wisdom</div>
+  </div>
+
+  <div class="welcome-card">
+    <!-- Tiers Preview -->
+    <div class="tiers-preview">
+      <div class="tier-chip t1"><div class="tier-chip-icon">🌿</div><div class="tier-chip-name">Initiate</div><div class="tier-chip-q">7 Questions</div></div>
+      <div class="tier-chip t2"><div class="tier-chip-icon">⚡</div><div class="tier-chip-name">Awakened</div><div class="tier-chip-q">7 Questions</div></div>
+      <div class="tier-chip t3"><div class="tier-chip-icon">🔮</div><div class="tier-chip-name">Sage</div><div class="tier-chip-q">7 Questions</div></div>
+      <div class="tier-chip t4"><div class="tier-chip-icon">🌟</div><div class="tier-chip-name">Grand Ritualist</div><div class="tier-chip-q">7 Questions</div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Wallet Connect -->
+    <div class="wallet-section">
+      <div class="wallet-status">
+        <div class="dot" id="wallet-dot"></div>
+        <span id="wallet-label" style="font-size:13px;color:var(--muted)">Wallet not connected</span>
+        <button class="btn btn-wallet btn-small" id="wallet-btn" onclick="connectWallet()">Connect</button>
+      </div>
+      <div id="wallet-display" style="display:none">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--green);word-break:break-all" id="wallet-addr-display"></div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">Connect wallet to mint POAP certificates after each tier ✦ Works with MetaMask, Rabby, Rainbow</p>
+    </div>
+
+    <!-- X Profile -->
+    <div class="mb-16">
+      <div class="field-label">Your X (Twitter) Username</div>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <div style="position:relative;flex:1">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px">@</span>
+          <input class="field-input" id="x-input" type="text" placeholder="YoungestGrandad" style="padding-left:28px" oninput="clearXProfile()"/>
+        </div>
+        <button class="btn btn-secondary btn-small" onclick="lookupX()" style="white-space:nowrap;flex-shrink:0">Look up</button>
+      </div>
+    </div>
+
+    <!-- X Profile Card -->
+    <div class="x-profile" id="x-profile-card">
+      <img class="x-avatar" id="x-avatar" src="" alt=""/>
+      <div>
+        <div class="x-name" id="x-name">—</div>
+        <div class="x-handle" id="x-handle">@—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="x-bio"></div>
+      </div>
+    </div>
+
+    <!-- Display Name fallback -->
+    <div class="mb-16">
+      <div class="field-label">Display Name on Certificate</div>
+      <input class="field-input" id="display-name" type="text" placeholder="e.g. Youngest Grandad"/>
+    </div>
+
+    <button class="btn btn-primary" onclick="startQuiz()">Begin the Ritual ⚡</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Minimum 5/7 correct to pass each tier & earn your certificate</p>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: QUIZ ══════════════ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="tier-badge" id="tier-badge">🌿 Tier 1 · Initiate</div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--muted)" id="score-display">0 / 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-text">
+      <span id="q-counter">Question 1 of 7</span>
+      <div class="live-score" id="live-score"></div>
+    </div>
+  </div>
+
+  <div class="question-card">
+    <div class="question-num" id="q-num">QUESTION 01</div>
+    <div class="question-text" id="q-text">Loading...</div>
+    <div class="options" id="options-wrap"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <div class="next-btn" id="next-btn">
+      <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: TIER RESULT ══════════════ -->
+<div class="screen" id="screen-result">
+  <div class="result-card" id="result-card">
+    <!-- Pass state -->
+    <div id="pass-content">
+      <div style="font-size:48px;margin-bottom:8px" id="result-emoji">🎉</div>
+      <h2 class="mid" style="margin-bottom:4px" id="result-title">Tier Complete!</h2>
+      <p class="sub mb-16" id="result-subtitle">You passed. Your certificate awaits.</p>
+
+      <!-- Certificate -->
+      <div class="cert-outer" id="cert-wrap">
+        <div class="cert-inner">
+          <div class="cert-ritlogo">⬡</div>
+          <div class="cert-headline">Ritual Foundation · Certificate of Knowledge</div>
+          <div class="cert-name" id="cert-name">Ritualist</div>
+          <div class="cert-tier-name" id="cert-tier-name">Initiate of the Ritual</div>
+          <div class="cert-score" id="cert-score">Score: 7/7</div>
+          <div class="cert-seal" id="cert-seal">🌿</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">Powered by <strong style="color:var(--green)">Ritual Network</strong> · Onchain AI Layer 1</div>
+          <div class="cert-date" id="cert-date">—</div>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <!-- Share text preview -->
+        <div class="share-text" id="share-text-preview"></div>
+
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="shareOnX()" style="flex:1">Share on 𝕏</button>
+          <button class="btn btn-secondary" onclick="mintCert()" style="flex:1" id="mint-btn">🪙 Mint POAP</button>
+        </div>
+        <button class="btn btn-primary" onclick="nextTier()" id="next-tier-btn" style="background:linear-gradient(135deg,var(--purple),var(--purple2));box-shadow:0 4px 20px rgba(124,58,237,0.3)">Continue to Next Tier →</button>
+      </div>
+    </div>
+
+    <!-- Fail state -->
+    <div id="fail-content" style="display:none">
+      <div class="fail-msg">
+        <h3>Not Quite Yet</h3>
+        <p id="fail-detail">You need 5/7 to pass. Review the lore and try again!</p>
+      </div>
+      <p class="sub mb-16">Ritual knowledge runs deep. Study the docs and try again.</p>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="retryTier()" style="flex:1">Retry Tier</button>
+        <button class="btn btn-primary" onclick="goHome()" style="flex:1">← Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: CHAMPION ══════════════ -->
+<div class="screen" id="screen-champion">
+  <div class="result-card" style="text-align:center">
+    <div class="champion-badge">🌟</div>
+    <h1 class="big" style="margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Grand Ritualist</h1>
+    <p class="sub" style="margin-bottom:24px">You have mastered all 4 tiers of Ritual knowledge. The onchain world salutes you.</p>
+
+    <div class="cert-outer">
+      <div class="cert-inner">
+        <div class="cert-ritlogo" style="font-size:48px">⬡</div>
+        <div class="cert-headline">Ritual Foundation · Supreme Certification</div>
+        <div class="cert-name" id="champ-name">Grand Ritualist</div>
+        <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Master of All Four Tiers</div>
+        <div class="cert-score">28/28 Possible · 4 Tiers Complete</div>
+        <div class="cert-seal" style="width:80px;height:80px;font-size:40px">🌟</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">Powered by <strong style="color:var(--green)">Ritual Network</strong> · Onchain AI Layer 1</div>
+        <div class="cert-date" id="champ-date">—</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-primary" onclick="shareChampion()" style="flex:1">Share on 𝕏 🌟</button>
+      <button class="btn btn-secondary" onclick="mintChampion()" style="flex:1">Mint Grand POAP</button>
+    </div>
+    <button class="btn btn-secondary mt-16" onclick="goHome()">← Play Again</button>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+// ═══════════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════════
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const size=Math.random()*2+1;
+    s.style.cssText=`
+      width:${size}px;height:${size}px;
+      top:${Math.random()*100}%;left:${Math.random()*100}%;
+      --d:${2+Math.random()*4}s;--delay:${Math.random()*5}s;
+    `;
+    c.appendChild(s);
+  }
+})();
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const state={
+  walletAddr:null,
+  xHandle:'',
+  displayName:'',
+  currentTier:0,   // 0-3
+  currentQ:0,
+  answers:[],
+  score:0,
+  tiersCompleted:[],  // stores {tier,score} for each passed tier
+  allTierScores:[],
+};
+
+// ═══════════════════════════════════════════
+// TIER DEFINITIONS
+// ═══════════════════════════════════════════
+const TIERS=[
+  {id:1,name:'Initiate',subname:'of the Ritual',icon:'🌿',color:'#22c55e',colorHex:'22c55e',passScore:5},
+  {id:2,name:'Awakened',subname:'Ritual Awakened',icon:'⚡',color:'#3b82f6',colorHex:'3b82f6',passScore:5},
+  {id:3,name:'Sage',subname:'Ritual Sage',icon:'🔮',color:'#a855f7',colorHex:'a855f7',passScore:5},
+  {id:4,name:'Grand Ritualist',subname:'Master of Ritual',icon:'🌟',color:'#f59e0b',colorHex:'f59e0b',passScore:5},
+];
+
+// ═══════════════════════════════════════════
+// QUESTION BANK — 28 questions across 4 tiers
+// ═══════════════════════════════════════════
+const QUESTIONS=[
+  // ── TIER 1: INITIATE (Foundational) ──
+  {tier:0,q:"What is Ritual Network primarily building?",opts:["A fast Layer 2 for Ethereum","A decentralized execution layer for AI — the first L1 with AI built natively onchain","A centralized AI API marketplace","A new proof-of-work mining protocol"],ans:1,explain:"Ritual is building the first sovereign Layer 1 blockchain with AI functionality embedded directly into the chain — not bolted on, but native."},
+  {tier:0,q:"Which product was Ritual's first released to the public?",opts:["Ritual Chain","Resonance","Infernet","Symphony"],ans:2,explain:"Infernet is Ritual's first product — a lightweight decentralized oracle network (DON) that connects offchain AI computations with onchain smart contracts on any EVM-compatible chain."},
+  {tier:0,q:"Ritual raised how much in total funding?",opts:["$5M","$25M","Over $30M","$100M"],ans:2,explain:"Ritual raised $25M Series A in 2024 from Archetype, Accel, Robot Ventures, and Polychain — totaling $30M+ across all rounds including from Polychain, DeepMind alumni, and Paradigm."},
+  {tier:0,q:"What is the Ritual Foundation?",opts:["The core development team at Ritual Labs","An independent org that leads adoption of Ritual Chain through grants, governance, and community support","A venture capital firm investing in AI projects","A certification body for blockchain developers"],ans:1,explain:"The Ritual Foundation is an independent organization — separate from Ritual Labs — that leads global adoption through grants (Realm), governance, educational resources, and community-driven guidance."},
+  {tier:0,q:"What does EVM++ mean in the context of Ritual?",opts:["A newer version of Ethereum Virtual Machine with AI-specific extensions and precompiles","An overclocked GPU computation model","Ethereum's official upgrade roadmap","A cross-chain bridge protocol"],ans:0,explain:"EVM++ is Ritual's enhanced version of the Ethereum Virtual Machine. It adds AI-specific precompiles and extensions so developers can call LLMs, ZK proofs, and more natively as on-chain operations."},
+  {tier:0,q:"What is 'Realm' in the Ritual ecosystem?",opts:["A multiplayer blockchain game","Ritual's no-deadline grants and full-stack support program for builders","The name of Ritual's testnet","A decentralized storage layer"],ans:1,explain:"Realm is Ritual Foundation's builder program — offering open-ended grants, technical support, and resources to developers building autonomous AI agents, smart DeFi, and dApps on Ritual."},
+  {tier:0,q:"Who can access Ritual's public testnet?",opts:["Only invited developers","Only token holders","Everyone — it is fully open to the public","Only node operators"],ans:2,explain:"Ritual's public testnet is 100% open. Anyone can visit faucet.ritualfoundation.org, claim testnet tokens, spin up nodes, and start building or testing immediately."},
+
+  // ── TIER 2: AWAKENED (Architecture) ──
+  {tier:1,q:"What is 'Resonance' in Ritual's architecture?",opts:["A community Discord server","Ritual's state-of-the-art fee mechanism that creates a two-sided marketplace between compute providers and users","A ZK proof system for AI model verification","A cross-chain messaging protocol"],ans:1,explain:"Resonance is Ritual's novel transaction fee mechanism that efficiently matches supply and demand for heterogeneous computation — including AI inference, ZK proofs, and more — using a two-sided auction market."},
+  {tier:1,q:"What is 'Symphony' in the Ritual stack?",opts:["A music NFT platform on Ritual","Ritual's consensus protocol using dual proof sharding and an Execute-Once-Verify-Many-Times (EOVMT) model","A smart contract language for AI agents","The name for Ritual's token economics"],ans:1,explain:"Symphony is Ritual's consensus protocol that uses Execute-Once-Verify-Many-Times (EOVMT), dual proof sharding, and optimal sampling to reduce replicated execution and enable high-performance AI workloads onchain."},
+  {tier:1,q:"What are TEEs in the context of Ritual?",opts:["Transaction Efficiency Engines — tools that speed up gas fees","Trusted Execution Environments — secure hardware enclaves where AI inference runs with cryptographic attestation","Token Exchange Endpoints for cross-chain swaps","Technical Evaluation Engines for auditing smart contracts"],ans:1,explain:"TEEs (Trusted Execution Environments) like Intel SGX and AWS Nitro Enclaves run AI models inside secure hardware enclaves. Prompts and responses stay encrypted, and results settle onchain with cryptographic proof in the same transaction."},
+  {tier:1,q:"How does Ritual handle AI model verification — what options does it support?",opts:["Only centralized verification by Ritual Labs","Only ZK proofs","Proof-system agnostic: developers can choose ZK (ZKML), Optimistic (OPML), or TEE-based verification depending on their needs","Only optimistic rollup-style fraud proofs"],ans:2,explain:"Ritual is proof-system agnostic. Developers can select ZKML (cryptographic ZK guarantees), OPML (optimistic with dispute resolution), or TEEs (hardware-level isolation) — choosing the right trade-off of cost, speed, and security."},
+  {tier:1,q:"What is 'Infernet' designed to do?",opts:["Run a centralized AI API gateway","Act as a lightweight library connecting offchain AI computations with onchain smart contracts on any EVM chain","Provide decentralized storage for AI model weights","Mine blocks using AI-powered hardware"],ans:1,explain:"Infernet is a lightweight bridge — it enables any EVM-compatible dApp to request AI computations from offchain nodes and receive verifiable results onchain, without trusting a centralized provider."},
+  {tier:1,q:"What type of blockchain is the Ritual Chain?",opts:["A Layer 2 rollup on Ethereum","A sovereign Layer 1 blockchain purpose-built for AI and heterogeneous computation","A sidechain of Solana","A parachain on Polkadot"],ans:1,explain:"Ritual Chain is a sovereign Layer 1 blockchain — not a rollup or sidechain — built from scratch with AI-native primitives, node specialization, and novel consensus (Symphony) and fee mechanisms (Resonance)."},
+  {tier:1,q:"Approximately how many dApps were built on Ritual's testnet in just the first weeks after opening?",opts:["5 dApps","50+ dApps","Over 500 dApps","Only 2 dApps"],ans:1,explain:"Over 50 decentralized applications were built in just weeks of Ritual's public testnet — a remarkable pace that reflects the strength, hunger, and quality of the Ritual builder community."},
+
+  // ── TIER 3: SAGE (Deep Protocol) ──
+  {tier:2,q:"What is 'vTune' in the Ritual research stack?",opts:["A node monitoring dashboard tool","A dual provenance and computational integrity gadget for LLM fine-tuning using watermarking and ZK proofs","A validator tuning algorithm for Resonance","An onchain music NFT protocol"],ans:1,explain:"vTune is Ritual's research gadget that provides dual provenance — both watermarking and ZK proof techniques — to verify that an AI model was fine-tuned correctly, enabling trustworthy model marketplaces onchain."},
+  {tier:2,q:"How do autonomous agents on Ritual handle scheduling?",opts:["They require human operators to manually trigger every action","They use keeper bots deployed on Ethereum","They register recurring execution natively at the block proposer level — no keeper bots needed","They rely on Chainlink Automation for scheduled tasks"],ans:2,explain:"Ritual has native scheduled execution — agents register tasks directly with the block proposer to run every N blocks, on a timer, or based on a condition. No external keeper bots or cron jobs needed. It's enshrined at the protocol level."},
+  {tier:2,q:"What unique capability does Ritual give to smart contracts that no other major L1 offers today?",opts:["Smart contracts that can own NFTs","Smart contracts that can think — calling LLMs, running multimodal AI, making verifiable decisions, and persisting as autonomous agents forever onchain","Smart contracts that auto-bridge to all EVM chains","Smart contracts that earn staking rewards automatically"],ans:1,explain:"Ritual allows smart contracts to natively call LLMs, multimodal models, ZK proofs, and FHE — all as precompile operations. Agents built this way can run indefinitely onchain, hold their own keys, and operate without human intervention."},
+  {tier:2,q:"What does Ritual's chain abstraction sidecar enable?",opts:["Bridging tokens between Ethereum and Solana","Verified AI computations across different blockchains — enabling cross-chain AI-powered dApps without custom oracle infrastructure","Running AI models on mobile devices","Translating Solidity code to Rust automatically"],ans:1,explain:"The chain abstraction sidecar enables Infernet to deliver verified AI results across multiple blockchains — allowing developers to build cross-chain AI dApps that maintain security and verifiability without building custom oracle infrastructure per chain."},
+  {tier:2,q:"What is 'OPML' — Optimistic Machine Learning — in the context of Ritual?",opts:["A new AI model format that reduces inference costs by 50%","A verification approach inspired by optimistic rollups — model execution is accepted optimistically, with model bisection-based verification triggered only in disputes","An oracle protocol for pulling ML model prices onchain","A governance mechanism for the Ritual DAO"],ans:1,explain:"OPML is Ritual's optimistic approach to ML verification — inspired by optimistic rollups. Results are accepted by default; if disputed, a bisection-based verification process is triggered. This trades strong guarantees for lower cost in certain use cases."},
+  {tier:2,q:"What is the Monotone Priority System in Ritual?",opts:["A fee ordering system ensuring higher-paying transactions always execute first (monotone by price)","A node specialization protocol for prioritizing compute tasks based on capability matching and network ordering rules, introduced January 2026","A voting mechanism for Ritual DAO governance proposals","A token distribution model for early validators"],ans:1,explain:"The Monotone Priority System (Jan 2026) is Ritual's protocol for ordering and prioritizing compute tasks across specialized nodes in a way that is fair, capability-matched, and resistant to manipulation — a key piece of the node specialization architecture."},
+  {tier:2,q:"What development tools does Ritual support for builders?",opts:["Only a custom Ritual-specific SDK with no Ethereum tooling compatibility","Standard Ethereum tools like Hardhat and Foundry work out of the box, plus Ritual-specific SDKs, Agent Launchpad, and EVM++ dev kit","Only Python-based tools via the Ritual Python SDK","Only JavaScript/TypeScript, no Solidity support"],ans:1,explain:"Ritual is fully EVM-compatible — Hardhat, Foundry, ethers.js all work. On top of this, Ritual adds its own Agent Launchpad, EVM++ dev kit, specialized sidecars, and AI model SDKs, letting any Ethereum developer port dApps seamlessly while accessing AI-native features."},
+
+  // ── TIER 4: GRAND RITUALIST (Mastery) ──
+  {tier:3,q:"What is the long-term vision Ritual has for autonomous agents?",opts:["AI agents that assist humans in writing smart contracts but always require human approval","Autonomous agents that persist onchain indefinitely, hold their own keys, schedule their own execution, accumulate financial sovereignty, and operate independent of any human controller","AI chatbots integrated into Ethereum wallets","Agents that optimize gas fees for existing protocols"],ans:1,explain:"Ritual's docs explicitly describe agents that 'survive crashes without human intervention,' 'hold their own keys,' and 'accrue both financial and computational sovereignty' — a vision of truly emancipated machine intelligence living onchain permanently."},
+  {tier:3,q:"What is the Ritual Testnet faucet URL?",opts:["testnet.ritual.net/faucet","faucet.ritual.ai","faucet.ritualfoundation.org","ritualfaucet.vercel.app"],ans:2,explain:"The official Ritual testnet faucet is at faucet.ritualfoundation.org — connect your wallet or paste your address to claim testnet RITUAL tokens and start building or testing immediately."},
+  {tier:3,q:"What are 'ritual-dapp-skills' and how do they work?",opts:["A set of achievement badges for completing Ritual quests","Markdown instruction files that teach AI coding agents (like Claude Code, Cursor, Codex) how to build dApps on Ritual — precompiles, contract patterns, deployment pipeline — so agents can build apps autonomously","A Solidity library for importing Ritual precompiles","A governance skill tree for Ritual DAO voters"],ans:1,explain:"ritual-dapp-skills are markdown skill files that any AI coding agent reads to understand Ritual's full stack. Compatible with Claude Code, Cursor, Codex, and others — enabling AI agents to autonomously architect, build, and deploy dApps on Ritual Chain."},
+  {tier:3,q:"What makes Ritual's approach to API calls from smart contracts unique?",opts:["Contracts can call any Web2 API directly via a built-in HTTP bridge with no verification","External APIs are called inside TEE enclaves with cryptographic attestation, no separate oracle infrastructure needed, and API credentials never appear on-chain","Ritual uses Chainlink for all external data feeds with standard oracle security","Contracts access APIs through a centralized Ritual-run gateway for compliance"],ans:1,explain:"On Ritual, agents call external APIs directly inside TEEs — price feeds, social data, payment rails — with cryptographic attestation on results. No separate oracle infrastructure, no exposed credentials on-chain, and no intermediary trust assumptions."},
+  {tier:3,q:"What is Ritual's stated approach to being 'proof-system neutral'?",opts:["Ritual has chosen ZK proofs as the one true verification method for all computations","Ritual recognizes that different applications need different security/cost/performance trade-offs, so it stays neutral — supporting ZKML, OPML, TEEs, and FHE as modular options developers can compose freely","Ritual delegates proof selection to a DAO vote every quarter","Ritual uses only optimistic proofs because they are cheapest"],ans:1,explain:"Ritual explicitly stays proof-system agnostic — developers choose from ZKML, OPML, TEE, or FHE based on their app's needs. This neutrality is intentional: Ritual sees itself as the infrastructure layer that enables all proof systems, not a bet on one winning approach."},
+  {tier:3,q:"Which investors and institutions are represented in Ritual's team background?",opts:["Mostly academic researchers from MIT and Stanford with no industry background","Operators and investors from Polychain, DeepMind, Paradigm, Coinbase, Citadel, and Palantir","Exclusively former Ethereum Foundation engineers","A mix of Solana and Avalanche ecosystem alumni"],ans:1,explain:"Ritual's founding team has backgrounds spanning Polychain Capital, DeepMind, Paradigm, Coinbase, Citadel, and Palantir — bringing both deep crypto infrastructure expertise and world-class AI/ML research experience to build this protocol."},
+  {tier:3,q:"What is the Ritual Foundation's call-to-action for builders right now?",opts:["Wait for mainnet before building — the testnet is not open","Apply to Realm for grants and support, build on the public testnet now, spin up nodes, and be part of the early ecosystem before mainnet launches","Purchase a Ritual developer license for $5000","Submit a whitepaper to be reviewed by the team for approval"],ans:1,explain:"The Ritual Foundation actively invites builders NOW — apply to Realm (no deadline, no expiry), use the public testnet, claim faucet tokens, spin up nodes. The window to be early and shape the ecosystem before mainnet is open. This is the moment."},
+];
+
+// ═══════════════════════════════════════════
+// WALLET
+// ═══════════════════════════════════════════
+async function connectWallet(){
+  if(typeof window.ethereum==='undefined'){
+    showToast('No wallet detected. Install MetaMask or Rabby 🦊');
+    return;
+  }
+  try{
+    const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+    state.walletAddr=accounts[0];
+    updateWalletUI();
+    showToast('Wallet connected ✓');
+  }catch(e){
+    showToast('Connection cancelled');
+  }
+}
+
+function updateWalletUI(){
+  const dot=document.getElementById('wallet-dot');
+  const label=document.getElementById('wallet-label');
+  const btn=document.getElementById('wallet-btn');
+  const display=document.getElementById('wallet-display');
+  const addrEl=document.getElementById('wallet-addr-display');
+  if(state.walletAddr){
+    dot.classList.add('connected');
+    const addr=state.walletAddr;
+    label.textContent='Wallet connected';
+    label.style.color='var(--green)';
+    btn.textContent='Change';
+    display.style.display='block';
+    addrEl.textContent=addr.slice(0,6)+'...'+addr.slice(-4);
+  }
+}
+
+// ═══════════════════════════════════════════
+// X PROFILE LOOKUP
+// ═══════════════════════════════════════════
+async function lookupX(){
+  const handle=document.getElementById('x-input').value.trim().replace('@','');
+  if(!handle){showToast('Enter your X username first');return;}
+  state.xHandle=handle;
+
+  // Try unavatar for avatar
+  const avatarUrl=`https://unavatar.io/twitter/${handle}`;
+  const profileCard=document.getElementById('x-profile-card');
+  const avatar=document.getElementById('x-avatar');
+  const nameEl=document.getElementById('x-name');
+  const handleEl=document.getElementById('x-handle');
+  const bioEl=document.getElementById('x-bio');
+  const displayNameInput=document.getElementById('display-name');
+
+  avatar.src=avatarUrl;
+  nameEl.textContent=handle;
+  handleEl.textContent='@'+handle;
+  bioEl.textContent='✦ Ritual Ecosystem Member';
+  profileCard.style.display='flex';
+
+  if(!displayNameInput.value) displayNameInput.value=handle;
+  showToast('Profile loaded from X ✓');
+}
+
+function clearXProfile(){
+  document.getElementById('x-profile-card').style.display='none';
+}
+
+// ═══════════════════════════════════════════
+// START QUIZ
+// ═══════════════════════════════════════════
+function startQuiz(){
+  const name=document.getElementById('display-name').value.trim();
+  if(!name){showToast('Enter your display name first!');return;}
+  state.displayName=name;
+  state.xHandle=document.getElementById('x-input').value.trim().replace('@','') || name;
+  state.currentTier=0;
+  state.tiersCompleted=[];
+  state.allTierScores=[];
+  beginTier(0);
+}
+
+function beginTier(tierIdx){
+  state.currentTier=tierIdx;
+  state.currentQ=0;
+  state.score=0;
+  state.answers=[];
+
+  const tier=TIERS[tierIdx];
+  const badge=document.getElementById('tier-badge');
+  badge.textContent=`${tier.icon} Tier ${tier.id} · ${tier.name}`;
+  badge.style.background=`${tier.color}22`;
+  badge.style.border=`1px solid ${tier.color}55`;
+  badge.style.color=tier.color;
+
+  // Build live score dots
+  const ls=document.getElementById('live-score');
+  ls.innerHTML='';
+  for(let i=0;i<7;i++){
+    const d=document.createElement('div');d.className='score-dot';d.id=`dot-${i}`;ls.appendChild(d);
+  }
+
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+// ═══════════════════════════════════════════
+// RENDER QUESTION
+// ═══════════════════════════════════════════
+function getTierQuestions(tierIdx){
+  return QUESTIONS.filter(q=>q.tier===tierIdx);
+}
+
+function renderQuestion(){
+  const qs=getTierQuestions(state.currentTier);
+  const q=qs[state.currentQ];
+  const total=qs.length;
+  const pct=((state.currentQ)/total)*100;
+
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('q-counter').textContent=`Question ${state.currentQ+1} of ${total}`;
+  document.getElementById('q-num').textContent=`QUESTION ${String(state.currentQ+1).padStart(2,'0')}`;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('score-display').textContent=`${state.score} / ${state.currentQ}`;
+
+  const opts=document.getElementById('options-wrap');
+  opts.innerHTML='';
+  const letters=['A','B','C','D'];
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    btn.innerHTML=`<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick=()=>selectAnswer(i);
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('feedback-box').className='feedback-box';
+  document.getElementById('feedback-box').textContent='';
+  const nb=document.getElementById('next-btn');
+  nb.style.display='none';
+}
+
+function selectAnswer(idx){
+  const qs=getTierQuestions(state.currentTier);
+  const q=qs[state.currentQ];
+  const correct=idx===q.ans;
+
+  // Disable all options
+  document.querySelectorAll('.option-btn').forEach((btn,i)=>{
+    btn.disabled=true;
+    if(i===q.ans) btn.classList.add('correct');
+    else if(i===idx&&!correct) btn.classList.add('wrong');
+  });
+
+  // Feedback
+  const fb=document.getElementById('feedback-box');
+  if(correct){
+    state.score++;
+    fb.className='feedback-box show correct-fb';
+    fb.innerHTML=`✓ Correct! ${q.explain}`;
+  }else{
+    fb.className='feedback-box show wrong-fb';
+    fb.innerHTML=`✗ Not quite. ${q.explain}`;
+  }
+
+  // Dot
+  const dot=document.getElementById(`dot-${state.currentQ}`);
+  if(dot) dot.classList.add(correct?'correct':'wrong');
+
+  document.getElementById('score-display').textContent=`${state.score} / ${state.currentQ+1}`;
+  state.answers.push({q:state.currentQ,correct});
+  document.getElementById('next-btn').style.display='block';
+}
+
+function nextQuestion(){
+  const qs=getTierQuestions(state.currentTier);
+  state.currentQ++;
+  if(state.currentQ>=qs.length){
+    showTierResult();
+  }else{
+    renderQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════
+// TIER RESULT
+// ═══════════════════════════════════════════
+function showTierResult(){
+  const tier=TIERS[state.currentTier];
+  const passed=state.score>=tier.passScore;
+  const total=getTierQuestions(state.currentTier).length;
+
+  document.getElementById('pass-content').style.display=passed?'block':'none';
+  document.getElementById('fail-content').style.display=passed?'none':'block';
+
+  if(passed){
+    state.tiersCompleted.push({tier:state.currentTier,score:state.score});
+    state.allTierScores.push(state.score);
+
+    // Fill certificate
+    document.getElementById('cert-name').textContent=state.displayName;
+    document.getElementById('cert-tier-name').textContent=`${tier.name} ${tier.subname}`;
+    document.getElementById('cert-score').textContent=`Score: ${state.score}/${total} · Tier ${tier.id} of 4`;
+    document.getElementById('cert-seal').textContent=tier.icon;
+    document.getElementById('cert-date').textContent=`Certified ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} · Ritual Network Testnet`;
+    document.getElementById('result-emoji').textContent=state.score===total?'🏆':'🎉';
+    document.getElementById('result-title').textContent=state.score===total?'Perfect Score!':'Tier Passed!';
+    document.getElementById('result-subtitle').textContent=`You scored ${state.score}/${total}. ${tier.icon} ${tier.name} achieved.`;
+
+    // Share text
+    const shareMsg=buildShareMsg(tier,state.score,total);
+    document.getElementById('share-text-preview').textContent=shareMsg;
+
+    // Last tier?
+    const nextBtn=document.getElementById('next-tier-btn');
+    if(state.currentTier>=3){
+      nextBtn.textContent='View Grand Ritual Champion ⭐';
+      nextBtn.onclick=showChampion;
+    }else{
+      nextBtn.textContent=`Continue to Tier ${state.currentTier+2}: ${TIERS[state.currentTier+1].name} →`;
+      nextBtn.onclick=()=>nextTier();
+    }
+
+    confetti({particleCount:100,spread:70,origin:{y:0.6},colors:['#00ff7f','#7c3aed','#f59e0b']});
+  }else{
+    document.getElementById('fail-detail').textContent=`You scored ${state.score}/${total}. Need ${tier.passScore}/${total} to earn your ${tier.name} certificate. Study the Ritual docs and try again!`;
+  }
+
+  showScreen('screen-result');
+}
+
+function buildShareMsg(tier,score,total){
+  const handle=state.xHandle?`@${state.xHandle}`:'I';
+  return `${tier.icon} ${handle} just earned the "${tier.name}" certificate on The Ritual Sage!\n\nScore: ${score}/${total} · Tier ${tier.id}/4 Complete\n\nTest your @ritualfnd knowledge 👇\nritual-sage.github.io\n\n#RitualNetwork #OnchainAI #Web3 #TheRitualSage`;
+}
+
+function shareOnX(){
+  const tier=TIERS[state.currentTier];
+  const total=getTierQuestions(state.currentTier).length;
+  const msg=buildShareMsg(tier,state.score,total);
+  const url=`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+}
+
+function shareChampion(){
+  const handle=state.xHandle?`@${state.xHandle}`:'I';
+  const msg=`🌟 ${handle} just became a GRAND RITUALIST on The Ritual Sage!\n\nAll 4 tiers complete. True onchain AI knowledge unlocked.\n\nThink you can match it? Try @ritualfnd's ultimate quiz 👇\nritual-sage.github.io\n\n#RitualNetwork #GrandRitualist #OnchainAI #TheRitualSage`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+async function mintCert(){
+  if(!state.walletAddr){
+    showToast('Connect your wallet first to mint!');
+    return;
+  }
+  const tier=TIERS[state.currentTier];
+  showToast(`${tier.icon} Minting ${tier.name} POAP... (Demo: actual mint requires deployed contract)`);
+  // In production: call your deployed smart contract here
+  // Example: await contract.mint(state.walletAddr, state.currentTier, state.score)
+}
+
+async function mintChampion(){
+  if(!state.walletAddr){
+    showToast('Connect your wallet first to mint!');
+    return;
+  }
+  showToast('🌟 Minting Grand Ritualist POAP... (Demo: actual mint requires deployed contract)');
+}
+
+function nextTier(){
+  beginTier(state.currentTier+1);
+}
+
+function retryTier(){
+  beginTier(state.currentTier);
+}
+
+function showChampion(){
+  document.getElementById('champ-name').textContent=state.displayName;
+  document.getElementById('champ-date').textContent=`Grand Ritualist · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`;
+  showScreen('screen-champion');
+  setTimeout(()=>{
+    confetti({particleCount:200,spread:100,origin:{y:0.5},colors:['#f59e0b','#00ff7f','#a855f7','#fff']});
+  },300);
+}
+
+function goHome(){
+  state.walletAddr && updateWalletUI();
+  showScreen('screen-welcome');
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Auto-detect wallet on load
+window.addEventListener('load',async()=>{
+  if(typeof window.ethereum!=='undefined'){
+    try{
+      const accounts=await window.ethereum.request({method:'eth_accounts'});
+      if(accounts.length>0){state.walletAddr=accounts[0];updateWalletUI();}
+    }catch(e){}
+  }
+});
+</script>
+</body>
+</html>
