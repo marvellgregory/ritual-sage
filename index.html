@@ -3,362 +3,955 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The Ritual Sage — Test Your Onchain AI Knowledge</title>
-<meta name="description" content="Prove your Ritual knowledge. 4 tiers. Mint your certificate. Share on X."/>
-<meta property="og:title" content="The Ritual Sage"/>
-<meta property="og:description" content="4-tier Ritual knowledge quiz. Earn your Sage certificate onchain."/>
-<meta property="og:image" content="https://ritual.net/og.png"/>
+<title>Ritual Hub — Command Center</title>
+<meta name="description" content="The ultimate Ritual ecosystem hub. Daily check-in, quiz, NFT gallery, points, certificates."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
+/* ══════════ ROOT ══════════ */
 :root{
-  --bg:#050510;
-  --surface:#0c0c22;
-  --card:#111130;
-  --border:#1e1e4a;
-  --green:#00ff7f;
-  --purple:#7c3aed;
-  --purple2:#a855f7;
-  --gold:#f59e0b;
-  --red:#ef4444;
-  --text:#e2e8f0;
-  --muted:#64748b;
-  --glow-green:0 0 20px rgba(0,255,127,0.4);
-  --glow-purple:0 0 20px rgba(124,58,237,0.5);
+  --bg:#03040f;
+  --bg2:#060818;
+  --surface:#0a0d1f;
+  --card:#0d1128;
+  --card2:#10152e;
+  --border:#1a2050;
+  --border2:#232b60;
+  --green:#00f5a0;
+  --green2:#00c97f;
+  --blue:#00b4ff;
+  --purple:#7c4dff;
+  --purple2:#b47fff;
+  --gold:#ffc82c;
+  --red:#ff4560;
+  --cyan:#00e5ff;
+  --text:#dde4ff;
+  --muted:#5b6a9a;
+  --muted2:#8895bb;
+  --glow-g:0 0 30px rgba(0,245,160,0.35);
+  --glow-b:0 0 30px rgba(0,180,255,0.35);
+  --glow-p:0 0 30px rgba(124,77,255,0.4);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  background:var(--bg);
-  color:var(--text);
+  background:var(--bg);color:var(--text);
   font-family:'Rajdhani',sans-serif;
-  min-height:100vh;
-  overflow-x:hidden;
+  min-height:100vh;overflow-x:hidden;cursor:default;
 }
 
-/* Animated bg */
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;
-  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(124,58,237,0.15) 0%,transparent 70%),
-             radial-gradient(ellipse 60% 40% at 80% 80%,rgba(0,255,127,0.08) 0%,transparent 60%);
-  pointer-events:none;
+/* ══════════ ANIMATED BG ══════════ */
+.space-bg{
+  position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+}
+.nebula{
+  position:absolute;border-radius:50%;filter:blur(90px);
+  animation:nebula-drift 20s ease-in-out infinite alternate;
+}
+.nebula-1{width:700px;height:400px;top:-100px;left:-100px;background:radial-gradient(ellipse,rgba(124,77,255,0.12),transparent 70%)}
+.nebula-2{width:600px;height:500px;bottom:-150px;right:-100px;background:radial-gradient(ellipse,rgba(0,245,160,0.08),transparent 70%);animation-delay:-10s}
+.nebula-3{width:400px;height:300px;top:40%;left:40%;background:radial-gradient(ellipse,rgba(0,180,255,0.06),transparent 70%);animation-delay:-5s}
+@keyframes nebula-drift{
+  0%{transform:translate(0,0) scale(1)}
+  100%{transform:translate(40px,30px) scale(1.1)}
+}
+.star{position:absolute;border-radius:50%;background:#fff}
+.star.a{animation:twinkle 3s ease-in-out infinite alternate}
+.star.b{animation:twinkle 4.5s ease-in-out infinite alternate}
+.star.c{animation:twinkle 2s ease-in-out infinite alternate}
+@keyframes twinkle{0%{opacity:0.1;transform:scale(1)}100%{opacity:0.9;transform:scale(1.4)}}
+
+/* Grid lines — cockpit feel */
+.grid-overlay{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    linear-gradient(rgba(0,180,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,180,255,0.025) 1px, transparent 1px);
+  background-size:60px 60px;
 }
 
-/* Stars */
-.stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) var(--delay,0s) infinite alternate}
-@keyframes twinkle{0%{opacity:0.1;transform:scale(1)}100%{opacity:0.8;transform:scale(1.3)}}
-
-/* Layout */
+/* ══════════ APP SHELL ══════════ */
 #app{position:relative;z-index:1;min-height:100vh}
 .screen{display:none;min-height:100vh;padding:20px}
-.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.screen.active{display:flex;flex-direction:column;align-items:center}
 
-/* ──────────── WELCOME SCREEN ──────────── */
-.logo-wrap{text-align:center;margin-bottom:32px}
-.logo-emblem{
-  width:100px;height:100px;margin:0 auto 16px;
-  border-radius:50%;
-  background:linear-gradient(135deg,var(--purple),var(--green));
-  display:flex;align-items:center;justify-content:center;
-  font-size:48px;
-  box-shadow:var(--glow-purple),var(--glow-green);
-  animation:pulse-orb 3s ease-in-out infinite;
+/* ══════════ HUD TOPBAR ══════════ */
+.hud-bar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(6,8,24,0.9);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  padding:0 20px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
 }
-@keyframes pulse-orb{0%,100%{box-shadow:0 0 20px rgba(124,58,237,0.5),0 0 40px rgba(0,255,127,0.2)}50%{box-shadow:0 0 40px rgba(124,58,237,0.8),0 0 80px rgba(0,255,127,0.4)}}
-.logo-title{
-  font-family:'Cinzel',serif;font-size:clamp(32px,6vw,56px);font-weight:900;
-  background:linear-gradient(135deg,var(--green) 0%,var(--purple2) 60%,var(--gold) 100%);
+.hud-logo{
+  font-family:'Orbitron',monospace;font-size:16px;font-weight:700;
+  background:linear-gradient(90deg,var(--green),var(--blue));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  letter-spacing:3px;line-height:1.1;
+  letter-spacing:2px;
 }
-.logo-sub{color:var(--muted);font-size:14px;letter-spacing:4px;text-transform:uppercase;margin-top:6px}
+.hud-logo span{color:var(--muted);-webkit-text-fill-color:var(--muted)}
+.hud-stats{display:flex;gap:20px;align-items:center}
+.hud-stat{
+  display:flex;align-items:center;gap:6px;
+  font-family:'Space Mono',monospace;font-size:11px;
+}
+.hud-stat-val{color:var(--green);font-weight:700}
+.hud-stat-label{color:var(--muted);font-size:10px;letter-spacing:1px}
+.hud-wallet{
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--cyan);cursor:pointer;
+  border:1px solid rgba(0,229,255,0.2);
+  border-radius:6px;padding:4px 10px;
+  transition:all 0.2s;
+}
+.hud-wallet:hover{background:rgba(0,229,255,0.08)}
 
-.welcome-card{
-  background:var(--card);border:1px solid var(--border);border-radius:20px;
-  padding:32px;max-width:560px;width:100%;
-  box-shadow:0 0 60px rgba(124,58,237,0.1);
+/* ══════════ COCKPIT LANDING ══════════ */
+.cockpit-wrap{
+  padding-top:80px;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;padding-bottom:40px;width:100%;
 }
 
-/* Tiers preview */
-.tiers-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}
+/* Hero title */
+.hero-section{text-align:center;margin-bottom:60px;padding-top:20px}
+.hero-prefix{
+  font-family:'Orbitron',monospace;font-size:11px;letter-spacing:6px;
+  color:var(--cyan);text-transform:uppercase;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.hero-prefix::before,.hero-prefix::after{
+  content:'';width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan));
+}
+.hero-prefix::after{background:linear-gradient(90deg,var(--cyan),transparent)}
+.hero-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(36px,7vw,72px);font-weight:900;
+  line-height:1;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--green) 0%,var(--blue) 40%,var(--purple2) 80%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-shadow:none;
+  filter:drop-shadow(0 0 30px rgba(0,245,160,0.3));
+}
+.hero-sub{
+  font-size:16px;color:var(--muted2);margin-top:12px;letter-spacing:1px;
+  font-family:'Rajdhani',sans-serif;
+}
+
+/* ══════════ COCKPIT PANELS ══════════ */
+.cockpit-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+  width:100%;max-width:980px;
+  padding:0 20px;
+}
+@media(max-width:760px){
+  .cockpit-grid{grid-template-columns:1fr 1fr;gap:14px}
+}
+@media(max-width:480px){
+  .cockpit-grid{grid-template-columns:1fr;gap:12px}
+}
+
+.panel{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+  border:1px solid var(--border);border-radius:16px;
+  padding:28px 24px;cursor:pointer;
+  transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.panel::before{
+  content:'';position:absolute;inset:0;border-radius:16px;
+  background:linear-gradient(135deg,var(--accent-color,rgba(0,245,160,0.05)) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.3s;pointer-events:none;
+}
+.panel:hover{
+  transform:translateY(-6px) scale(1.01);
+  border-color:var(--accent-border,var(--border2));
+  box-shadow:0 20px 60px rgba(0,0,0,0.5),var(--accent-glow,var(--glow-g));
+}
+.panel:hover::before{opacity:1}
+
+.panel.green{--accent-color:rgba(0,245,160,0.06);--accent-border:rgba(0,245,160,0.35);--accent-glow:0 0 40px rgba(0,245,160,0.2)}
+.panel.blue{--accent-color:rgba(0,180,255,0.06);--accent-border:rgba(0,180,255,0.35);--accent-glow:0 0 40px rgba(0,180,255,0.2)}
+.panel.purple{--accent-color:rgba(124,77,255,0.06);--accent-border:rgba(124,77,255,0.35);--accent-glow:0 0 40px rgba(124,77,255,0.2)}
+.panel.gold{--accent-color:rgba(255,200,44,0.06);--accent-border:rgba(255,200,44,0.35);--accent-glow:0 0 40px rgba(255,200,44,0.2)}
+.panel.cyan{--accent-color:rgba(0,229,255,0.06);--accent-border:rgba(0,229,255,0.35);--accent-glow:0 0 40px rgba(0,229,255,0.2)}
+.panel.red{--accent-color:rgba(255,69,96,0.06);--accent-border:rgba(255,69,96,0.35);--accent-glow:0 0 40px rgba(255,69,96,0.2)}
+
+/* Corner decorations */
+.panel::after{
+  content:'';position:absolute;
+  top:-1px;right:-1px;
+  width:20px;height:20px;
+  border-top:2px solid var(--accent-border,var(--border2));
+  border-right:2px solid var(--accent-border,var(--border2));
+  border-radius:0 16px 0 0;
+  opacity:0;transition:opacity 0.3s;
+}
+.panel:hover::after{opacity:1}
+
+.panel-icon{font-size:36px;margin-bottom:16px;display:block;filter:drop-shadow(0 0 10px rgba(255,255,255,0.2))}
+.panel-label{
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text);
+  margin-bottom:6px;
+}
+.panel-desc{font-size:13px;color:var(--muted2);line-height:1.5}
+.panel-badge{
+  position:absolute;top:14px;right:14px;
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+  padding:3px 8px;border-radius:100px;
+}
+.badge-live{background:rgba(0,245,160,0.15);color:var(--green);border:1px solid rgba(0,245,160,0.3)}
+.badge-new{background:rgba(0,180,255,0.15);color:var(--blue);border:1px solid rgba(0,180,255,0.3)}
+.badge-hot{background:rgba(255,200,44,0.15);color:var(--gold);border:1px solid rgba(255,200,44,0.3)}
+
+/* Node status */
+.node-status{
+  display:flex;align-items:center;gap:8px;
+  margin-top:12px;font-size:12px;font-family:'Space Mono',monospace;
+}
+.node-dot{
+  width:8px;height:8px;border-radius:50%;
+  animation:node-pulse 2s ease-in-out infinite;
+}
+.node-dot.active{background:var(--green);box-shadow:0 0 8px var(--green)}
+.node-dot.inactive{background:var(--red);box-shadow:0 0 8px var(--red)}
+@keyframes node-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+
+/* Timer display */
+.node-timer{
+  font-family:'Space Mono',monospace;font-size:18px;font-weight:700;
+  color:var(--green);margin-top:8px;letter-spacing:2px;
+}
+
+/* Bottom bar of cockpit */
+.cockpit-footer{
+  margin-top:40px;display:flex;align-items:center;gap:20px;
+  font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);
+  flex-wrap:wrap;justify-content:center;
+}
+.cockpit-footer a{color:var(--muted2);text-decoration:none;transition:color 0.2s}
+.cockpit-footer a:hover{color:var(--green)}
+
+/* ══════════ CHECKIN SCREEN ══════════ */
+.section-header{
+  text-align:center;padding:90px 20px 30px;width:100%;max-width:700px;
+}
+.section-back{
+  position:fixed;top:70px;left:20px;z-index:50;
+  font-family:'Space Mono',monospace;font-size:12px;
+  color:var(--muted2);cursor:pointer;
+  padding:8px 14px;border:1px solid var(--border2);border-radius:8px;
+  background:rgba(6,8,24,0.8);backdrop-filter:blur(10px);
+  transition:all 0.2s;display:flex;align-items:center;gap:6px;
+}
+.section-back:hover{color:var(--green);border-color:rgba(0,245,160,0.3)}
+
+.section-title{
+  font-family:'Orbitron',monospace;font-size:clamp(22px,4vw,36px);
+  font-weight:700;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+}
+.section-sub{font-size:15px;color:var(--muted2);margin-top:4px}
+
+/* Check-in card */
+.checkin-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:36px;width:100%;max-width:560px;
+  text-align:center;
+}
+.checkin-orbit{
+  width:140px;height:140px;border-radius:50%;margin:0 auto 24px;
+  background:linear-gradient(135deg,var(--surface),var(--card2));
+  border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:52px;position:relative;
+  box-shadow:0 0 0 0 rgba(0,245,160,0.3);
+}
+.checkin-orbit.active-node{
+  border-color:rgba(0,245,160,0.5);
+  animation:orbit-glow 2s ease-in-out infinite;
+}
+@keyframes orbit-glow{
+  0%,100%{box-shadow:0 0 20px rgba(0,245,160,0.2),0 0 0 0 rgba(0,245,160,0)}
+  50%{box-shadow:0 0 40px rgba(0,245,160,0.4),0 0 60px rgba(0,245,160,0.1)}
+}
+.checkin-orbit-ring{
+  position:absolute;inset:-12px;border-radius:50%;
+  border:1px dashed rgba(0,245,160,0.2);
+  animation:ring-spin 12s linear infinite;
+}
+@keyframes ring-spin{to{transform:rotate(360deg)}}
+.checkin-orbit-ring-dot{
+  position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);
+}
+
+.node-big-timer{
+  font-family:'Orbitron',monospace;font-size:42px;font-weight:700;
+  color:var(--green);letter-spacing:4px;margin:8px 0;
+  filter:drop-shadow(0 0 15px rgba(0,245,160,0.4));
+}
+.node-big-label{font-size:12px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
+
+.streak-display{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  margin:16px 0;font-family:'Space Mono',monospace;font-size:13px;
+}
+.streak-fire{font-size:22px}
+.streak-count{color:var(--gold);font-weight:700;font-size:20px}
+.streak-label{color:var(--muted2)}
+
+.points-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin:16px 0;
+}
+.points-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.points-stat{text-align:center}
+.points-stat-val{
+  font-family:'Orbitron',monospace;font-size:20px;font-weight:700;
+  color:var(--text);
+}
+.points-stat-val.green{color:var(--green)}
+.points-stat-val.gold{color:var(--gold)}
+.points-stat-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+
+/* ══════════ QUIZ SCREEN (preserved, restyled) ══════════ */
+.quiz-wrap{width:100%;max-width:660px;padding-top:80px}
+.quiz-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.tier-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:100px;font-size:12px;
+  font-family:'Orbitron',monospace;font-weight:700;letter-spacing:1px;
+  border:1px solid var(--border2);background:var(--card);
+}
+.progress-bar{background:var(--border);border-radius:100px;height:4px;overflow:hidden;margin-bottom:10px}
+.progress-fill{height:100%;border-radius:100px;transition:width 0.4s ease;background:linear-gradient(90deg,var(--green),var(--blue))}
+.question-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:36px;
+  box-shadow:0 0 60px rgba(0,0,0,0.5),0 0 30px rgba(0,180,255,0.03);
+}
+.question-num{font-size:10px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;font-family:'Space Mono',monospace}
+.question-text{
+  font-family:'Orbitron',monospace;font-size:clamp(15px,2.5vw,20px);
+  font-weight:500;line-height:1.5;margin-bottom:28px;color:#fff;
+}
+.options{display:grid;gap:10px}
+.option-btn{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;text-align:left;
+  cursor:pointer;transition:all 0.2s;
+  font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text);
+  display:flex;align-items:center;gap:14px;width:100%;
+}
+.option-btn:hover:not(:disabled){border-color:rgba(0,180,255,0.4);background:rgba(0,180,255,0.05);transform:translateX(4px)}
+.option-letter{
+  width:32px;height:32px;border-radius:8px;background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:12px;font-weight:700;
+  flex-shrink:0;color:var(--muted2);
+}
+.option-btn.correct{border-color:var(--green)!important;background:rgba(0,245,160,0.08)!important;color:var(--green)}
+.option-btn.correct .option-letter{background:var(--green);color:#000}
+.option-btn.wrong{border-color:var(--red)!important;background:rgba(255,69,96,0.08)!important;color:var(--red)}
+.option-btn.wrong .option-letter{background:var(--red);color:#fff}
+.option-btn:disabled{cursor:default;transform:none!important}
+.feedback-box{display:none;margin-top:18px;padding:14px 18px;border-radius:12px;font-size:14px;line-height:1.5}
+.feedback-box.show{display:block}
+.feedback-box.correct-fb{background:rgba(0,245,160,0.06);border:1px solid rgba(0,245,160,0.2);color:var(--green)}
+.feedback-box.wrong-fb{background:rgba(255,69,96,0.06);border:1px solid rgba(255,69,96,0.2);color:#ff8a9a}
+.next-btn{margin-top:18px;display:none}
+
+/* score dots */
+.live-score{display:flex;gap:5px;align-items:center}
+.score-dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--border);transition:all 0.3s}
+.score-dot.correct{background:var(--green);border-color:var(--green);box-shadow:0 0 6px var(--green)}
+.score-dot.wrong{background:var(--red);border-color:var(--red)}
+
+/* ══════════ RESULT / CERTIFICATE ══════════ */
+.result-card{
+  background:var(--card);border-radius:24px;padding:40px;
+  max-width:600px;width:100%;text-align:center;
+  margin-top:80px;
+}
+.cert-wrap{
+  border-radius:16px;padding:3px;margin:24px 0;
+  background:linear-gradient(135deg,var(--green),var(--blue),var(--purple2));
+}
+#cert-downloadable{
+  background:var(--bg);border-radius:13px;padding:32px;
+}
+.cert-logo{
+  font-family:'Orbitron',monospace;font-size:10px;letter-spacing:4px;
+  color:var(--muted);text-transform:uppercase;margin-bottom:4px;
+}
+.cert-symbol{font-size:36px;margin-bottom:8px}
+.cert-headline{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:20px}
+.cert-name{
+  font-family:'Orbitron',monospace;font-size:clamp(20px,4vw,30px);
+  font-weight:900;color:#fff;margin-bottom:6px;
+}
+.cert-tier{
+  font-family:'Orbitron',monospace;font-size:18px;font-weight:700;margin-bottom:14px;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.cert-score-box{
+  display:inline-block;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 20px;font-family:'Space Mono',monospace;
+  font-size:12px;color:var(--muted2);margin-bottom:14px;
+}
+.cert-seal{
+  width:64px;height:64px;border-radius:50%;margin:8px auto;
+  background:linear-gradient(135deg,var(--gold),#e8a800);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  box-shadow:0 0 20px rgba(255,200,44,0.4);
+}
+.cert-date{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:10px;font-family:'Space Mono',monospace}
+
+/* Champion cert */
+.champion-cert{
+  border-radius:16px;padding:3px;margin:20px 0;
+  background:linear-gradient(135deg,var(--gold),var(--green),var(--purple2),var(--blue));
+}
+
+/* ══════════ NFT GALLERY ══════════ */
+.nft-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:20px;width:100%;max-width:980px;
+  padding:0 20px 40px;
+}
+.nft-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  transition:all 0.3s;cursor:pointer;
+}
+.nft-card:hover{transform:translateY(-6px);border-color:var(--border2);box-shadow:0 20px 50px rgba(0,0,0,0.5),var(--glow-p)}
+.nft-img{
+  width:100%;aspect-ratio:1;
+  background:linear-gradient(135deg,var(--surface),var(--card2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:52px;position:relative;overflow:hidden;
+}
+.nft-img::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,rgba(124,77,255,0.15),transparent 70%);
+}
+.nft-img-placeholder{font-size:64px;filter:drop-shadow(0 0 20px rgba(124,77,255,0.4))}
+.nft-body{padding:16px}
+.nft-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.nft-creator{font-size:12px;color:var(--muted2);margin-bottom:8px}
+.nft-tag{
+  display:inline-block;font-size:10px;letter-spacing:1px;
+  padding:3px 8px;border-radius:100px;
+  background:rgba(124,77,255,0.15);color:var(--purple2);
+  border:1px solid rgba(124,77,255,0.25);
+}
+.nft-link-btn{
+  display:block;margin-top:12px;text-align:center;padding:8px;
+  background:rgba(0,180,255,0.08);border:1px solid rgba(0,180,255,0.25);
+  border-radius:8px;color:var(--blue);font-size:12px;font-family:'Space Mono',monospace;
+  text-decoration:none;transition:all 0.2s;
+}
+.nft-link-btn:hover{background:rgba(0,180,255,0.15)}
+
+/* ══════════ DAPPS DIRECTORY ══════════ */
+.dapp-list{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;width:100%;max-width:980px;padding:0 20px 40px;
+}
+.dapp-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  display:flex;align-items:flex-start;gap:14px;
+  transition:all 0.2s;text-decoration:none;
+}
+.dapp-item:hover{border-color:var(--border2);transform:translateX(4px);box-shadow:var(--glow-b)}
+.dapp-icon-wrap{
+  width:44px;height:44px;border-radius:10px;
+  background:linear-gradient(135deg,var(--surface),var(--card2));
+  border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.dapp-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px}
+.dapp-desc{font-size:12px;color:var(--muted2);line-height:1.5}
+.dapp-category{
+  font-size:10px;letter-spacing:1px;color:var(--cyan);
+  text-transform:uppercase;margin-top:6px;font-family:'Space Mono',monospace;
+}
+
+/* ══════════ LEADERBOARD ══════════ */
+.leaderboard-wrap{width:100%;max-width:660px;padding:0 20px 40px}
+.lb-row{
+  display:flex;align-items:center;gap:14px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;margin-bottom:10px;
+  transition:all 0.2s;
+}
+.lb-row:hover{border-color:var(--border2)}
+.lb-rank{
+  font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+  width:32px;text-align:center;color:var(--muted);
+}
+.lb-rank.gold{color:var(--gold)}
+.lb-rank.silver{color:#b0b8d0}
+.lb-rank.bronze{color:#cd7f32}
+.lb-name{flex:1;font-weight:600;font-size:15px}
+.lb-pts{
+  font-family:'Space Mono',monospace;font-size:13px;
+  color:var(--green);font-weight:700;
+}
+.lb-badge{font-size:16px;margin-left:4px}
+
+/* ══════════ NEWS FEED ══════════ */
+.news-grid{
+  display:grid;grid-template-columns:1fr;gap:14px;
+  width:100%;max-width:700px;padding:0 20px 40px;
+}
+.news-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;display:flex;gap:16px;
+  align-items:flex-start;transition:all 0.2s;cursor:pointer;
+}
+.news-item:hover{border-color:var(--border2);box-shadow:var(--glow-b)}
+.news-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--blue);box-shadow:0 0 8px var(--blue);
+  margin-top:5px;flex-shrink:0;
+}
+.news-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px}
+.news-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.4}
+.news-excerpt{font-size:13px;color:var(--muted2);line-height:1.5}
+.news-tag{
+  display:inline-block;font-size:10px;letter-spacing:1px;
+  padding:2px 8px;border-radius:100px;margin-top:8px;
+  background:rgba(0,180,255,0.1);color:var(--blue);border:1px solid rgba(0,180,255,0.2);
+}
+
+/* ══════════ PROFILE / X LOOKUP ══════════ */
+.profile-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:32px;width:100%;max-width:540px;
+  text-align:center;margin-bottom:20px;
+}
+.x-profile-display{
+  display:none;align-items:center;gap:14px;
+  background:var(--surface);border:1px solid rgba(29,161,242,0.2);
+  border-radius:12px;padding:16px;margin-top:16px;
+}
+.x-profile-display.show{display:flex}
+.x-avatar{width:52px;height:52px;border-radius:50%;border:2px solid rgba(29,161,242,0.5);object-fit:cover}
+.x-name{font-weight:700;font-size:15px}
+.x-handle{color:#1da1f2;font-size:13px}
+.x-error{
+  display:none;margin-top:10px;padding:10px 14px;
+  background:rgba(255,69,96,0.08);border:1px solid rgba(255,69,96,0.25);
+  border-radius:8px;color:var(--red);font-size:13px;text-align:center;
+}
+.x-error.show{display:block}
+
+/* ══════════ BUTTONS ══════════ */
+.btn{
+  border:none;border-radius:12px;cursor:pointer;
+  font-family:'Orbitron',monospace;font-weight:700;
+  font-size:13px;letter-spacing:2px;text-transform:uppercase;
+  transition:all 0.2s;padding:14px 28px;width:100%;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:#000;box-shadow:0 4px 20px rgba(0,245,160,0.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,245,160,0.5)}
+.btn-secondary{
+  background:transparent;color:var(--green);
+  border:1px solid rgba(0,245,160,0.4);
+}
+.btn-secondary:hover{background:rgba(0,245,160,0.06)}
+.btn-blue{
+  background:linear-gradient(135deg,var(--blue),#0090d0);
+  color:#000;box-shadow:0 4px 20px rgba(0,180,255,0.3);
+}
+.btn-blue:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,180,255,0.5)}
+.btn-gold{
+  background:linear-gradient(135deg,var(--gold),#e8a800);
+  color:#000;box-shadow:0 4px 20px rgba(255,200,44,0.3);
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,200,44,0.5)}
+.btn-small{padding:8px 16px;font-size:11px;width:auto}
+.btn-purple{
+  background:linear-gradient(135deg,var(--purple),#6034d0);
+  color:#fff;box-shadow:0 4px 20px rgba(124,77,255,0.3);
+}
+.btn-purple:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,77,255,0.5)}
+
+/* ══════════ INPUTS ══════════ */
+.field-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace}
+.field-input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;color:var(--text);
+  font-family:'Rajdhani',sans-serif;font-size:15px;
+  transition:border-color 0.2s,box-shadow 0.2s;outline:none;
+}
+.field-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,245,160,0.1)}
+.field-input::placeholder{color:var(--muted)}
+
+/* ══════════ TOAST ══════════ */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--card);border:1px solid var(--green);border-radius:12px;
+  padding:14px 20px;font-size:13px;color:var(--green);
+  font-family:'Space Mono',monospace;
+  transform:translateY(80px);opacity:0;transition:all 0.3s;
+  pointer-events:none;max-width:320px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.5),0 0 20px rgba(0,245,160,0.1);
+}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* ══════════ DIVIDERS ══════════ */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:20px 0}
+.section-divider{
+  width:100%;max-width:980px;padding:0 20px;
+}
+
+/* ══════════ WELCOME (Quiz entry) ══════════ */
+.welcome-inner{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:32px;width:100%;max-width:560px;
+  margin-top:16px;
+}
+.tiers-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
 .tier-chip{
-  border-radius:12px;padding:14px;text-align:center;
-  border:1px solid;position:relative;overflow:hidden;
+  border-radius:12px;padding:14px;text-align:center;border:1px solid;
   transition:transform 0.2s;cursor:default;
 }
 .tier-chip:hover{transform:translateY(-2px)}
-.tier-chip.t1{border-color:#22c55e33;background:linear-gradient(135deg,#052e1610,#052e16)}
-.tier-chip.t2{border-color:#3b82f633;background:linear-gradient(135deg,#172554 10,#172554)}
-.tier-chip.t3{border-color:#a855f733;background:linear-gradient(135deg,#2e1065 10,#2e1065)}
-.tier-chip.t4{border-color:#f59e0b33;background:linear-gradient(135deg,#451a03 10,#451a03)}
+.tier-chip.t1{border-color:rgba(0,245,160,0.2);background:rgba(0,245,160,0.04)}
+.tier-chip.t2{border-color:rgba(0,180,255,0.2);background:rgba(0,180,255,0.04)}
+.tier-chip.t3{border-color:rgba(124,77,255,0.2);background:rgba(124,77,255,0.04)}
+.tier-chip.t4{border-color:rgba(255,200,44,0.2);background:rgba(255,200,44,0.04)}
 .tier-chip-icon{font-size:24px;margin-bottom:4px}
-.tier-chip-name{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px}
+.tier-chip-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--text);letter-spacing:1px}
 .tier-chip-q{font-size:11px;color:var(--muted)}
 
-/* Input */
-.field-label{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.field-input{
-  width:100%;background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Rajdhani',sans-serif;
-  font-size:16px;transition:border-color 0.2s,box-shadow 0.2s;outline:none;
-}
-.field-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,255,127,0.1)}
-.field-input::placeholder{color:var(--muted)}
-
-/* Wallet section */
+/* wallet section */
 .wallet-section{
   background:var(--surface);border:1px solid var(--border);
   border-radius:12px;padding:16px;margin-bottom:20px;
 }
-.wallet-status{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.wallet-status{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .dot.connected{background:var(--green);box-shadow:0 0 8px var(--green)}
-.wallet-addr{font-family:'Space Mono',monospace;font-size:12px;color:var(--green)}
+.wallet-addr{font-family:'Space Mono',monospace;font-size:11px;color:var(--green)}
 
-/* Buttons */
-.btn{
-  border:none;border-radius:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;
-  font-weight:700;font-size:16px;letter-spacing:1px;text-transform:uppercase;
-  transition:all 0.2s;padding:14px 28px;width:100%;
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--green),#00cc66);
-  color:#000;box-shadow:0 4px 20px rgba(0,255,127,0.3);
-}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,127,0.5)}
-.btn-primary:active{transform:translateY(0)}
-.btn-secondary{
-  background:transparent;color:var(--green);
-  border:1px solid var(--green);
-}
-.btn-secondary:hover{background:rgba(0,255,127,0.08)}
-.btn-wallet{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.3);
-  padding:10px 20px;font-size:14px;width:auto;
-}
-.btn-wallet:hover{transform:translateY(-1px);box-shadow:0 6px 25px rgba(124,58,237,0.5)}
-.btn-small{padding:8px 16px;font-size:13px;width:auto}
-
-/* X Profile display */
-.x-profile{
-  display:none;align-items:center;gap:12px;
-  background:var(--surface);border:1px solid #1da1f233;
-  border-radius:12px;padding:14px;margin-bottom:16px;
-}
-.x-avatar{width:48px;height:48px;border-radius:50%;border:2px solid #1da1f2;object-fit:cover}
-.x-name{font-weight:700;font-size:16px}
-.x-handle{color:#1da1f2;font-size:13px}
-
-/* ──────────── QUIZ SCREEN ──────────── */
-.quiz-header{
-  width:100%;max-width:640px;margin-bottom:24px;
-}
-.tier-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:6px 16px;border-radius:100px;font-size:13px;
-  font-family:'Cinzel',serif;font-weight:700;letter-spacing:1px;
-  margin-bottom:12px;
-}
-.progress-bar{background:var(--border);border-radius:100px;height:6px;overflow:hidden;margin-bottom:8px}
-.progress-fill{height:100%;border-radius:100px;transition:width 0.4s ease;background:linear-gradient(90deg,var(--green),var(--purple2))}
-.progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
-
-.question-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:20px;padding:32px;max-width:640px;width:100%;
-  box-shadow:0 0 40px rgba(0,0,0,0.5);
-}
-.question-num{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
-.question-text{
-  font-family:'Cinzel',serif;font-size:clamp(16px,3vw,22px);
-  font-weight:700;line-height:1.5;margin-bottom:28px;color:#fff;
-}
-
-.options{display:grid;gap:12px}
-.option-btn{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:16px 20px;text-align:left;
-  cursor:pointer;transition:all 0.2s;
-  font-family:'Rajdhani',sans-serif;font-size:16px;color:var(--text);
-  display:flex;align-items:center;gap:14px;
-}
-.option-btn:hover:not(:disabled){border-color:var(--purple);background:rgba(124,58,237,0.08);transform:translateX(4px)}
-.option-letter{
-  width:32px;height:32px;border-radius:8px;background:var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Space Mono',monospace;font-size:13px;font-weight:700;
-  flex-shrink:0;
-}
-.option-btn.correct{border-color:var(--green)!important;background:rgba(0,255,127,0.1)!important;color:var(--green)}
-.option-btn.correct .option-letter{background:var(--green);color:#000}
-.option-btn.wrong{border-color:var(--red)!important;background:rgba(239,68,68,0.1)!important;color:var(--red)}
-.option-btn.wrong .option-letter{background:var(--red);color:#fff}
-.option-btn:disabled{cursor:default;transform:none!important}
-
-.feedback-box{
-  display:none;margin-top:20px;padding:14px 18px;
-  border-radius:12px;font-size:14px;line-height:1.5;
-}
-.feedback-box.show{display:block}
-.feedback-box.correct-fb{background:rgba(0,255,127,0.08);border:1px solid rgba(0,255,127,0.2);color:var(--green)}
-.feedback-box.wrong-fb{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#fca5a5}
-
-.next-btn{
-  margin-top:20px;display:none;
-}
-
-/* Score bar in quiz */
-.live-score{
-  display:flex;gap:6px;margin-top:8px;
-}
-.score-dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--border);transition:all 0.3s}
-.score-dot.correct{background:var(--green);border-color:var(--green);box-shadow:0 0 6px var(--green)}
-.score-dot.wrong{background:var(--red);border-color:var(--red)}
-
-/* ──────────── TIER RESULT SCREEN ──────────── */
-.result-card{
-  background:var(--card);border-radius:24px;padding:36px;
-  max-width:580px;width:100%;text-align:center;position:relative;overflow:hidden;
-}
-.result-card::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(124,58,237,0.15),transparent);
-  pointer-events:none;
-}
-
-/* Certificate */
-.cert-outer{
-  border-radius:16px;padding:3px;margin-bottom:24px;
-  background:linear-gradient(135deg,var(--green),var(--purple2),var(--gold));
-}
-.cert-inner{
-  background:var(--bg);border-radius:13px;padding:28px;
-}
-.cert-ritlogo{font-size:32px;margin-bottom:8px}
-.cert-headline{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
-.cert-name{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:4px}
-.cert-tier-name{
-  font-family:'Cinzel',serif;font-size:18px;font-weight:700;margin-bottom:12px;
-  background:linear-gradient(135deg,var(--green),var(--purple2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.cert-score{
-  display:inline-block;background:var(--surface);border:1px solid var(--border);
-  border-radius:8px;padding:8px 20px;font-family:'Space Mono',monospace;
-  font-size:13px;color:var(--muted);margin-bottom:12px;
-}
-.cert-seal{
-  width:60px;height:60px;border-radius:50%;margin:8px auto;
-  background:linear-gradient(135deg,var(--gold),#d97706);
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;
-  box-shadow:0 0 20px rgba(245,158,11,0.4);
-}
-.cert-date{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:8px}
-
-.result-actions{display:flex;flex-direction:column;gap:12px}
-.share-text{font-size:13px;color:var(--muted);background:var(--surface);border-radius:8px;padding:10px 12px;text-align:left;line-height:1.5;word-break:break-word}
-
-/* Pass/Fail state */
+/* fail/pass */
 .fail-msg{
-  background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
+  background:rgba(255,69,96,0.06);border:1px solid rgba(255,69,96,0.2);
   border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;
 }
-.fail-msg h3{color:var(--red);font-family:'Cinzel',serif;font-size:18px;margin-bottom:8px}
-.fail-msg p{color:#fca5a5;font-size:14px;line-height:1.5}
+.fail-msg h3{color:var(--red);font-family:'Orbitron',monospace;font-size:18px;margin-bottom:8px}
+.fail-msg p{color:#ff8a9a;font-size:14px;line-height:1.5}
 
-/* ──────────── HALL OF TIERS ──────────── */
-.tier-progress-display{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;max-width:560px;width:100%}
-.tier-card{
-  background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;
-  text-align:center;transition:all 0.3s;
-}
-.tier-card.unlocked{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,127,0.1)}
-.tier-card.locked{opacity:0.4}
-.tier-card-icon{font-size:32px;margin-bottom:8px}
-.tier-card-name{font-family:'Cinzel',serif;font-size:14px;font-weight:700;margin-bottom:4px}
-.tier-card-status{font-size:12px;color:var(--muted)}
-.tier-card.unlocked .tier-card-status{color:var(--green)}
-
-/* ──────────── FINAL CHAMPION ──────────── */
+/* champion */
 .champion-badge{
   width:120px;height:120px;border-radius:50%;margin:0 auto 20px;
   background:linear-gradient(135deg,var(--gold),#d97706,var(--purple2));
   display:flex;align-items:center;justify-content:center;font-size:56px;
-  box-shadow:0 0 40px rgba(245,158,11,0.5),0 0 80px rgba(124,58,237,0.3);
-  animation:pulse-orb 2s ease-in-out infinite;
+  box-shadow:0 0 40px rgba(255,200,44,0.5),0 0 80px rgba(124,77,255,0.3);
+  animation:champion-pulse 2s ease-in-out infinite;
+}
+@keyframes champion-pulse{
+  0%,100%{box-shadow:0 0 40px rgba(255,200,44,0.5),0 0 80px rgba(124,77,255,0.3)}
+  50%{box-shadow:0 0 60px rgba(255,200,44,0.7),0 0 120px rgba(124,77,255,0.5)}
 }
 
-/* ──────────── UTILITIES ──────────── */
-.text-center{text-align:center}
-.mt-8{margin-top:8px}
-.mt-16{margin-top:16px}
-.mt-24{margin-top:24px}
-.mb-8{margin-bottom:8px}
-.mb-16{margin-bottom:16px}
-.gap-12{gap:12px}
-.flex{display:flex}
-.flex-col{flex-direction:column}
-.items-center{align-items:center}
-.justify-between{justify-content:space-between}
-.w-full{width:100%}
-
-h1.big{font-family:'Cinzel',serif;font-size:clamp(24px,5vw,40px);font-weight:900;line-height:1.2}
-h2.mid{font-family:'Cinzel',serif;font-size:clamp(18px,3.5vw,28px);font-weight:700}
-p.sub{color:var(--muted);font-size:15px;line-height:1.6}
-
-.divider{height:1px;background:var(--border);margin:20px 0}
-
-/* Notification toast */
-#toast{
-  position:fixed;bottom:24px;right:24px;z-index:9999;
-  background:var(--card);border:1px solid var(--green);border-radius:12px;
-  padding:14px 20px;font-size:14px;color:var(--green);
-  transform:translateY(80px);opacity:0;transition:all 0.3s;pointer-events:none;
-  max-width:300px;box-shadow:0 8px 30px rgba(0,0,0,0.4);
+/* tier-progress */
+.tier-progress-display{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;max-width:560px;width:100%}
+.tier-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px;text-align:center;transition:all 0.3s;
 }
-#toast.show{transform:translateY(0);opacity:1}
+.tier-card.unlocked{border-color:rgba(0,245,160,0.3);box-shadow:0 0 20px rgba(0,245,160,0.08)}
+.tier-card.locked{opacity:0.4}
+.tier-card-icon{font-size:32px;margin-bottom:8px}
+.tier-card-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;margin-bottom:4px}
+.tier-card-status{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace}
+.tier-card.unlocked .tier-card-status{color:var(--green)}
 
-/* Spinner */
-.spinner{
-  width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--green);
-  border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;
+/* announcement overlay */
+.announcement-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(3,4,15,0.92);backdrop-filter:blur(20px);
+  align-items:center;justify-content:center;
 }
+.announcement-overlay.show{display:flex}
+.announcement-box{
+  background:var(--card);border:2px solid var(--gold);
+  border-radius:24px;padding:48px 40px;max-width:500px;width:90%;
+  text-align:center;position:relative;
+  box-shadow:0 0 80px rgba(255,200,44,0.3),0 0 200px rgba(255,200,44,0.1);
+  animation:announce-in 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes announce-in{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
+.announce-emoji{font-size:72px;margin-bottom:16px;display:block;animation:bounce-emoji 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes bounce-emoji{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.announce-title{
+  font-family:'Orbitron',monospace;font-size:clamp(18px,4vw,28px);font-weight:700;
+  background:linear-gradient(135deg,var(--gold),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:8px;
+}
+.announce-name{
+  font-family:'Orbitron',monospace;font-size:20px;color:#fff;
+  font-weight:900;margin:8px 0;
+}
+.announce-sub{color:var(--muted2);font-size:14px;line-height:1.6;margin-bottom:24px}
+.announce-close{
+  background:none;border:1px solid var(--border2);color:var(--muted2);
+  border-radius:8px;padding:8px 20px;cursor:pointer;
+  font-family:'Space Mono',monospace;font-size:12px;
+  transition:all 0.2s;
+}
+.announce-close:hover{border-color:var(--green);color:var(--green)}
+
+/* spinner */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Responsive */
+/* mt/mb utils */
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
+.text-center{text-align:center}
+.flex{display:flex}.gap-10{gap:10px}.gap-12{gap:12px}
+h2.mid{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,26px);font-weight:700}
+p.sub{color:var(--muted2);font-size:15px;line-height:1.6}
+
+/* ══════════ SMART CONTRACT INFO BOX ══════════ */
+.contract-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:20px;margin:20px 0;text-align:left;
+}
+.contract-title{
+  font-family:'Space Mono',monospace;font-size:12px;color:var(--cyan);
+  letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;
+}
+.contract-code{
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--muted2);word-break:break-all;line-height:1.6;
+}
+.contract-code span{color:var(--green)}
+
 @media(max-width:500px){
   .tiers-preview{grid-template-columns:1fr 1fr}
-  .tier-progress-display{grid-template-columns:1fr 1fr}
   .question-card{padding:20px}
-  .result-card{padding:22px}
-  .cert-inner{padding:18px}
+  .result-card{padding:22px;margin-top:70px}
+  .checkin-card{padding:22px}
 }
 </style>
 </head>
 <body>
 
-<!-- Stars -->
-<div class="stars" id="stars"></div>
+<!-- Space Background -->
+<div class="space-bg">
+  <div class="nebula nebula-1"></div>
+  <div class="nebula nebula-2"></div>
+  <div class="nebula nebula-3"></div>
+  <div id="stars"></div>
+</div>
+<div class="grid-overlay"></div>
+
+<!-- HUD Topbar -->
+<div class="hud-bar">
+  <div class="hud-logo">RITUAL<span>·</span>HUB</div>
+  <div class="hud-stats">
+    <div class="hud-stat">
+      <div>
+        <div class="hud-stat-val" id="hud-pts">0</div>
+        <div class="hud-stat-label">POINTS</div>
+      </div>
+    </div>
+    <div class="hud-stat">
+      <div>
+        <div class="hud-stat-val" id="hud-streak">0🔥</div>
+        <div class="hud-stat-label">STREAK</div>
+      </div>
+    </div>
+    <div class="hud-wallet" id="hud-wallet-btn" onclick="connectWalletGlobal()">
+      <span id="hud-wallet-text">Connect Wallet</span>
+    </div>
+  </div>
+</div>
 
 <!-- Toast -->
 <div id="toast"></div>
 
+<!-- Announcement overlay -->
+<div class="announcement-overlay" id="announce-overlay">
+  <div class="announcement-box">
+    <span class="announce-emoji" id="ann-emoji">🏆</span>
+    <div class="announce-title" id="ann-title">Tier Complete!</div>
+    <div class="announce-name" id="ann-name"></div>
+    <div class="announce-sub" id="ann-sub"></div>
+    <button class="announce-close" onclick="closeAnnouncement()">Continue ✦</button>
+  </div>
+</div>
+
 <div id="app">
 
-<!-- ══════════════ SCREEN: WELCOME ══════════════ -->
-<div class="screen active" id="screen-welcome">
-  <div class="logo-wrap">
-    <div class="logo-emblem">🔮</div>
-    <div class="logo-title">The Ritual Sage</div>
-    <div class="logo-sub">Onchain AI Knowledge · 4 Tiers · Mint Your Wisdom</div>
+<!-- ════════════════════════ SCREEN: COCKPIT ════════════════════════ -->
+<div class="screen active" id="screen-cockpit">
+  <div class="cockpit-wrap">
+
+    <div class="hero-section">
+      <div class="hero-prefix">Ritual Foundation Command Center</div>
+      <div class="hero-title">RITUAL HUB</div>
+      <div class="hero-sub">Your gateway to the onchain AI frontier ✦ Enter the mothership</div>
+    </div>
+
+    <div class="cockpit-grid">
+
+      <!-- Daily Check-In / Node -->
+      <div class="panel green" onclick="showScreen('screen-checkin')">
+        <span class="panel-badge badge-live">LIVE</span>
+        <span class="panel-icon">🛸</span>
+        <div class="panel-label">Daily Node</div>
+        <div class="panel-desc">Activate your node. Check in daily to keep it running and earn points.</div>
+        <div class="node-status">
+          <div class="node-dot" id="cockpit-node-dot"></div>
+          <span id="cockpit-node-label" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2)">Loading...</span>
+        </div>
+        <div class="node-timer" id="cockpit-timer">--:--:--</div>
+      </div>
+
+      <!-- Quiz -->
+      <div class="panel blue" onclick="showScreen('screen-quiz-entry')">
+        <span class="panel-badge badge-hot">4 TIERS</span>
+        <span class="panel-icon">⚡</span>
+        <div class="panel-label">Ritual Quiz</div>
+        <div class="panel-desc">Test your onchain AI knowledge. Complete all 4 tiers. Earn certificates.</div>
+        <div class="node-status" style="margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2)" id="quiz-progress-label">0 / 4 tiers complete</span>
+        </div>
+      </div>
+
+      <!-- NFT Gallery -->
+      <div class="panel purple" onclick="showScreen('screen-nfts')">
+        <span class="panel-badge badge-new">NEW</span>
+        <span class="panel-icon">🖼️</span>
+        <div class="panel-label">Ritual NFTs</div>
+        <div class="panel-desc">Community NFT projects on Ritual Chain. Discover collections and get whitelisted.</div>
+      </div>
+
+      <!-- News / Updates -->
+      <div class="panel cyan" onclick="showScreen('screen-news')">
+        <span class="panel-icon">📡</span>
+        <div class="panel-label">Ritual Feed</div>
+        <div class="panel-desc">Latest news, updates and announcements from the Ritual ecosystem.</div>
+      </div>
+
+      <!-- dApps Directory -->
+      <div class="panel gold" onclick="showScreen('screen-dapps')">
+        <span class="panel-icon">🔗</span>
+        <div class="panel-label">Ecosystem dApps</div>
+        <div class="panel-desc">Explore all dApps, tools and protocols building on Ritual Chain.</div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="panel" onclick="showScreen('screen-leaderboard')" style="--accent-color:rgba(255,69,96,0.05);--accent-border:rgba(255,69,96,0.3);--accent-glow:0 0 40px rgba(255,69,96,0.15)">
+        <span class="panel-icon">🏆</span>
+        <div class="panel-label">Leaderboard</div>
+        <div class="panel-desc">Rankings, top ritualists, and points standings across the community.</div>
+      </div>
+
+    </div>
+
+    <div class="cockpit-footer">
+      <span>⬡ Ritual Chain Testnet</span>
+      <span>·</span>
+      <a href="https://ritualfoundation.org" target="_blank">Docs</a>
+      <span>·</span>
+      <a href="https://discord.gg/ritual-net" target="_blank">Discord</a>
+      <span>·</span>
+      <a href="https://twitter.com/ritualfnd" target="_blank">Twitter</a>
+      <span>·</span>
+      <a href="https://faucet.ritualfoundation.org" target="_blank">Faucet</a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SCREEN: DAILY CHECK-IN ════════════════════════ -->
+<div class="screen" id="screen-checkin">
+  <div class="section-back" onclick="showScreen('screen-cockpit')">← COCKPIT</div>
+  <div class="section-header">
+    <div class="section-title">⚙️ DAILY NODE</div>
+    <div class="section-sub">Activate your node every 24 hours to earn points and keep your streak</div>
   </div>
 
-  <div class="welcome-card">
-    <!-- Tiers Preview -->
+  <div class="checkin-card">
+    <div class="checkin-orbit" id="checkin-orbit">
+      <div class="checkin-orbit-ring">
+        <div class="checkin-orbit-ring-dot"></div>
+      </div>
+      <span id="checkin-icon" style="font-size:52px">🛸</span>
+    </div>
+
+    <div class="node-big-timer" id="checkin-big-timer">00:00:00</div>
+    <div class="node-big-label" id="checkin-timer-label">NODE OFFLINE</div>
+
+    <div class="streak-display">
+      <span class="streak-fire">🔥</span>
+      <span class="streak-count" id="streak-num">0</span>
+      <span class="streak-label">day streak</span>
+    </div>
+
+    <div class="points-bar">
+      <div class="points-grid">
+        <div class="points-stat">
+          <div class="points-stat-val green" id="total-pts-display">0</div>
+          <div class="points-stat-label">Total Points</div>
+        </div>
+        <div class="points-stat">
+          <div class="points-stat-val gold" id="streak-pts-display">0</div>
+          <div class="points-stat-label">Streak Bonus</div>
+        </div>
+        <div class="points-stat">
+          <div class="points-stat-val" id="rank-display">—</div>
+          <div class="points-stat-label">Your Rank</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="checkin-btn" onclick="doCheckIn()">🛸 ACTIVATE NODE</button>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;font-family:'Space Mono',monospace">+50 pts per day · +10 pts bonus per streak day · +100 pts quiz tier</p>
+  </div>
+
+  <!-- Points log -->
+  <div style="width:100%;max-width:540px;margin-top:20px">
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">ACTIVITY LOG</div>
+    <div id="activity-log"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SCREEN: QUIZ ENTRY ════════════════════════ -->
+<div class="screen" id="screen-quiz-entry">
+  <div class="section-back" onclick="showScreen('screen-cockpit')">← COCKPIT</div>
+  <div class="section-header">
+    <div class="section-title">⚡ THE RITUAL SAGE</div>
+    <div class="section-sub">Prove your onchain AI mastery across 4 tiers. Earn certificates. Mint POAPs.</div>
+  </div>
+
+  <div class="welcome-inner">
     <div class="tiers-preview">
       <div class="tier-chip t1"><div class="tier-chip-icon">🌿</div><div class="tier-chip-name">Initiate</div><div class="tier-chip-q">7 Questions</div></div>
       <div class="tier-chip t2"><div class="tier-chip-icon">⚡</div><div class="tier-chip-name">Awakened</div><div class="tier-chip-q">7 Questions</div></div>
@@ -368,17 +961,16 @@ p.sub{color:var(--muted);font-size:15px;line-height:1.6}
 
     <div class="divider"></div>
 
-    <!-- Wallet Connect -->
     <div class="wallet-section">
       <div class="wallet-status">
         <div class="dot" id="wallet-dot"></div>
         <span id="wallet-label" style="font-size:13px;color:var(--muted)">Wallet not connected</span>
-        <button class="btn btn-wallet btn-small" id="wallet-btn" onclick="connectWallet()">Connect</button>
+        <button class="btn btn-purple btn-small" id="wallet-btn" onclick="connectWalletGlobal()" style="margin-left:auto">Connect</button>
       </div>
       <div id="wallet-display" style="display:none">
         <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--green);word-break:break-all" id="wallet-addr-display"></div>
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:8px">Connect wallet to mint POAP certificates after each tier ✦ Works with MetaMask, Rabby, Rainbow</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">Connect to mint POAP certificates · Works with MetaMask, Rabby, Rainbow</p>
     </div>
 
     <!-- X Profile -->
@@ -393,8 +985,7 @@ p.sub{color:var(--muted);font-size:15px;line-height:1.6}
       </div>
     </div>
 
-    <!-- X Profile Card -->
-    <div class="x-profile" id="x-profile-card">
+    <div class="x-profile-display" id="x-profile-card">
       <img class="x-avatar" id="x-avatar" src="" alt=""/>
       <div>
         <div class="x-name" id="x-name">—</div>
@@ -402,85 +993,83 @@ p.sub{color:var(--muted);font-size:15px;line-height:1.6}
         <div style="font-size:12px;color:var(--muted);margin-top:2px" id="x-bio"></div>
       </div>
     </div>
+    <div class="x-error" id="x-error">⚠ No user profile found for that handle. Please check and try again.</div>
 
-    <!-- Display Name fallback -->
-    <div class="mb-16">
-      <div class="field-label">Display Name on Certificate</div>
+    <div class="mb-16 mt-16">
+      <div class="field-label">Name to appear on your certificate</div>
       <input class="field-input" id="display-name" type="text" placeholder="e.g. Youngest Grandad"/>
     </div>
 
-    <button class="btn btn-primary" onclick="startQuiz()">Begin the Ritual ⚡</button>
-    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Minimum 5/7 correct to pass each tier & earn your certificate</p>
+    <button class="btn btn-primary" onclick="startQuiz()">BEGIN THE RITUAL ⚡</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;font-family:'Space Mono',monospace">Min 5/7 correct to pass each tier & earn your certificate</p>
   </div>
 </div>
 
-<!-- ══════════════ SCREEN: QUIZ ══════════════ -->
+<!-- ════════════════════════ SCREEN: QUIZ ════════════════════════ -->
 <div class="screen" id="screen-quiz">
-  <div class="quiz-header">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+  <div class="section-back" onclick="goHome()">← HOME</div>
+  <div class="quiz-wrap">
+    <div class="quiz-topbar">
       <div class="tier-badge" id="tier-badge">🌿 Tier 1 · Initiate</div>
       <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--muted)" id="score-display">0 / 0</div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-    <div class="progress-text">
+    <div class="progress-bar mb-8"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:20px">
       <span id="q-counter">Question 1 of 7</span>
       <div class="live-score" id="live-score"></div>
     </div>
-  </div>
-
-  <div class="question-card">
-    <div class="question-num" id="q-num">QUESTION 01</div>
-    <div class="question-text" id="q-text">Loading...</div>
-    <div class="options" id="options-wrap"></div>
-    <div class="feedback-box" id="feedback-box"></div>
-    <div class="next-btn" id="next-btn">
-      <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+    <div class="question-card">
+      <div class="question-num" id="q-num">QUESTION 01</div>
+      <div class="question-text" id="q-text">Loading...</div>
+      <div class="options" id="options-wrap"></div>
+      <div class="feedback-box" id="feedback-box"></div>
+      <div class="next-btn" id="next-btn">
+        <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════ SCREEN: TIER RESULT ══════════════ -->
+<!-- ════════════════════════ SCREEN: TIER RESULT ════════════════════════ -->
 <div class="screen" id="screen-result">
   <div class="result-card" id="result-card">
-    <!-- Pass state -->
+    <!-- Pass -->
     <div id="pass-content">
-      <div style="font-size:48px;margin-bottom:8px" id="result-emoji">🎉</div>
-      <h2 class="mid" style="margin-bottom:4px" id="result-title">Tier Complete!</h2>
-      <p class="sub mb-16" id="result-subtitle">You passed. Your certificate awaits.</p>
+      <div style="font-size:52px;margin-bottom:8px" id="result-emoji">🎉</div>
+      <h2 class="mid mb-8" id="result-title">Tier Complete!</h2>
+      <p class="sub mb-16" id="result-subtitle">You passed. Certificate minted.</p>
 
-      <!-- Certificate -->
-      <div class="cert-outer" id="cert-wrap">
-        <div class="cert-inner">
-          <div class="cert-ritlogo">⬡</div>
-          <div class="cert-headline">Ritual Foundation · Certificate of Knowledge</div>
+      <div class="cert-wrap">
+        <div id="cert-downloadable">
+          <div class="cert-logo">⬡ Ritual Foundation</div>
+          <div class="cert-symbol" id="cert-sym">🌿</div>
+          <div class="cert-headline">Certificate of Ritual Knowledge</div>
           <div class="cert-name" id="cert-name">Ritualist</div>
-          <div class="cert-tier-name" id="cert-tier-name">Initiate of the Ritual</div>
-          <div class="cert-score" id="cert-score">Score: 7/7</div>
+          <div class="cert-tier" id="cert-tier-name">Initiate of the Ritual</div>
+          <div class="cert-score-box" id="cert-score">Score: 7/7</div>
           <div class="cert-seal" id="cert-seal">🌿</div>
           <div style="font-size:12px;color:var(--muted);margin-top:8px">Powered by <strong style="color:var(--green)">Ritual Network</strong> · Onchain AI Layer 1</div>
           <div class="cert-date" id="cert-date">—</div>
         </div>
       </div>
 
-      <div class="result-actions">
-        <!-- Share text preview -->
-        <div class="share-text" id="share-text-preview"></div>
-
+      <div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;gap:10px">
           <button class="btn btn-primary" onclick="shareOnX()" style="flex:1">Share on 𝕏</button>
-          <button class="btn btn-secondary" onclick="mintCert()" style="flex:1" id="mint-btn">🪙 Mint POAP</button>
+          <button class="btn btn-secondary" onclick="mintCert()" style="flex:1">🪙 Mint POAP</button>
         </div>
-        <button class="btn btn-primary" onclick="nextTier()" id="next-tier-btn" style="background:linear-gradient(135deg,var(--purple),var(--purple2));box-shadow:0 4px 20px rgba(124,58,237,0.3)">Continue to Next Tier →</button>
+        <button class="btn btn-secondary" onclick="downloadCert()">⬇ Download Certificate</button>
+        <button class="btn btn-blue" onclick="nextTier()" id="next-tier-btn">Continue to Next Tier →</button>
       </div>
     </div>
 
-    <!-- Fail state -->
+    <!-- Fail -->
     <div id="fail-content" style="display:none">
       <div class="fail-msg">
         <h3>Not Quite Yet</h3>
         <p id="fail-detail">You need 5/7 to pass. Review the lore and try again!</p>
       </div>
-      <p class="sub mb-16">Ritual knowledge runs deep. Study the docs and try again.</p>
+      <p class="sub mb-16">Study the Ritual docs and come back stronger.</p>
       <div style="display:flex;gap:10px">
         <button class="btn btn-secondary" onclick="retryTier()" style="flex:1">Retry Tier</button>
         <button class="btn btn-primary" onclick="goHome()" style="flex:1">← Home</button>
@@ -489,20 +1078,21 @@ p.sub{color:var(--muted);font-size:15px;line-height:1.6}
   </div>
 </div>
 
-<!-- ══════════════ SCREEN: CHAMPION ══════════════ -->
+<!-- ════════════════════════ SCREEN: GRAND CHAMPION ════════════════════════ -->
 <div class="screen" id="screen-champion">
-  <div class="result-card" style="text-align:center">
+  <div class="result-card" style="text-align:center;margin-top:80px">
     <div class="champion-badge">🌟</div>
-    <h1 class="big" style="margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Grand Ritualist</h1>
+    <h1 style="font-family:'Orbitron',monospace;font-size:clamp(24px,5vw,40px);font-weight:900;margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">GRAND RITUALIST</h1>
     <p class="sub" style="margin-bottom:24px">You have mastered all 4 tiers of Ritual knowledge. The onchain world salutes you.</p>
 
-    <div class="cert-outer">
-      <div class="cert-inner">
-        <div class="cert-ritlogo" style="font-size:48px">⬡</div>
-        <div class="cert-headline">Ritual Foundation · Supreme Certification</div>
+    <div class="champion-cert">
+      <div id="grand-cert-downloadable" style="background:var(--bg);border-radius:13px;padding:32px">
+        <div class="cert-logo">⬡ Ritual Foundation — Supreme Certification</div>
+        <div class="cert-symbol" style="font-size:48px">⭐</div>
+        <div class="cert-headline">This certifies that</div>
         <div class="cert-name" id="champ-name">Grand Ritualist</div>
-        <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Master of All Four Tiers</div>
-        <div class="cert-score">28/28 Possible · 4 Tiers Complete</div>
+        <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:700;margin:8px 0 12px;background:linear-gradient(135deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Has completed all four tiers and is a TRUE GRAND RITUALIST of the Ritual Ecosystem</div>
+        <div class="cert-score-box">28/28 Possible · 4 Tiers Complete · Full Mastery</div>
         <div class="cert-seal" style="width:80px;height:80px;font-size:40px">🌟</div>
         <div style="font-size:12px;color:var(--muted);margin-top:8px">Powered by <strong style="color:var(--green)">Ritual Network</strong> · Onchain AI Layer 1</div>
         <div class="cert-date" id="champ-date">—</div>
@@ -510,11 +1100,55 @@ p.sub{color:var(--muted);font-size:15px;line-height:1.6}
     </div>
 
     <div style="display:flex;gap:10px;margin-top:20px">
-      <button class="btn btn-primary" onclick="shareChampion()" style="flex:1">Share on 𝕏 🌟</button>
+      <button class="btn btn-gold" onclick="shareChampion()" style="flex:1">Share on 𝕏 🌟</button>
       <button class="btn btn-secondary" onclick="mintChampion()" style="flex:1">Mint Grand POAP</button>
     </div>
+    <button class="btn btn-secondary mt-16" onclick="downloadGrandCert()">⬇ Download Supreme Certificate</button>
     <button class="btn btn-secondary mt-16" onclick="goHome()">← Play Again</button>
   </div>
+</div>
+
+<!-- ════════════════════════ SCREEN: NFT GALLERY ════════════════════════ -->
+<div class="screen" id="screen-nfts">
+  <div class="section-back" onclick="showScreen('screen-cockpit')">← COCKPIT</div>
+  <div class="section-header">
+    <div class="section-title">🖼️ RITUAL NFTs</div>
+    <div class="section-sub">Community NFT collections building on Ritual Chain</div>
+  </div>
+  <div class="nft-grid" id="nft-grid"></div>
+  <div style="width:100%;max-width:980px;padding:0 20px 40px;text-align:center">
+    <p style="color:var(--muted);font-size:13px;font-family:'Space Mono',monospace">Is your NFT project on Ritual Chain? <a href="https://twitter.com/YoungestGrandad" target="_blank" style="color:var(--blue)">Contact us</a> to get featured.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════ SCREEN: NEWS ════════════════════════ -->
+<div class="screen" id="screen-news">
+  <div class="section-back" onclick="showScreen('screen-cockpit')">← COCKPIT</div>
+  <div class="section-header">
+    <div class="section-title">📡 RITUAL FEED</div>
+    <div class="section-sub">Latest updates from the Ritual ecosystem</div>
+  </div>
+  <div class="news-grid" id="news-grid"></div>
+</div>
+
+<!-- ════════════════════════ SCREEN: DAPPS ════════════════════════ -->
+<div class="screen" id="screen-dapps">
+  <div class="section-back" onclick="showScreen('screen-cockpit')">← COCKPIT</div>
+  <div class="section-header">
+    <div class="section-title">🔗 ECOSYSTEM DAPPS</div>
+    <div class="section-sub">All protocols and tools building on Ritual Chain</div>
+  </div>
+  <div class="dapp-list" id="dapp-list"></div>
+</div>
+
+<!-- ════════════════════════ SCREEN: LEADERBOARD ════════════════════════ -->
+<div class="screen" id="screen-leaderboard">
+  <div class="section-back" onclick="showScreen('screen-cockpit')">← COCKPIT</div>
+  <div class="section-header">
+    <div class="section-title">🏆 LEADERBOARD</div>
+    <div class="section-sub">Top Ritual community members by points</div>
+  </div>
+  <div class="leaderboard-wrap" id="lb-wrap"></div>
 </div>
 
 </div><!-- end #app -->
@@ -525,15 +1159,12 @@ p.sub{color:var(--muted);font-size:15px;line-height:1.6}
 // ═══════════════════════════════════════════
 (function(){
   const c=document.getElementById('stars');
-  for(let i=0;i<120;i++){
+  const classes=['a','b','c'];
+  for(let i=0;i<150;i++){
     const s=document.createElement('div');
-    s.className='star';
-    const size=Math.random()*2+1;
-    s.style.cssText=`
-      width:${size}px;height:${size}px;
-      top:${Math.random()*100}%;left:${Math.random()*100}%;
-      --d:${2+Math.random()*4}s;--delay:${Math.random()*5}s;
-    `;
+    s.className='star '+classes[i%3];
+    const size=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*6}s;animation-duration:${2+Math.random()*4}s`;
     c.appendChild(s);
   }
 })();
@@ -545,69 +1176,74 @@ const state={
   walletAddr:null,
   xHandle:'',
   displayName:'',
-  currentTier:0,   // 0-3
+  currentTier:0,
   currentQ:0,
   answers:[],
   score:0,
-  tiersCompleted:[],  // stores {tier,score} for each passed tier
+  tiersCompleted:[],
   allTierScores:[],
 };
 
 // ═══════════════════════════════════════════
-// TIER DEFINITIONS
+// PERSISTENCE (localStorage)
 // ═══════════════════════════════════════════
-const TIERS=[
-  {id:1,name:'Initiate',subname:'of the Ritual',icon:'🌿',color:'#22c55e',colorHex:'22c55e',passScore:5},
-  {id:2,name:'Awakened',subname:'Ritual Awakened',icon:'⚡',color:'#3b82f6',colorHex:'3b82f6',passScore:5},
-  {id:3,name:'Sage',subname:'Ritual Sage',icon:'🔮',color:'#a855f7',colorHex:'a855f7',passScore:5},
-  {id:4,name:'Grand Ritualist',subname:'Master of Ritual',icon:'🌟',color:'#f59e0b',colorHex:'f59e0b',passScore:5},
-];
+function saveData(){
+  localStorage.setItem('ritualHub',JSON.stringify({
+    pts:userPts,
+    streak:streak,
+    lastCheckin:lastCheckin,
+    nodeExpiry:nodeExpiry,
+    displayName:state.displayName,
+    xHandle:state.xHandle,
+    tiersCompleted:state.tiersCompleted,
+    log:activityLog,
+    visitors:visitors,
+  }));
+}
+function loadData(){
+  try{
+    const d=JSON.parse(localStorage.getItem('ritualHub')||'{}');
+    if(d.pts) userPts=d.pts;
+    if(d.streak) streak=d.streak;
+    if(d.lastCheckin) lastCheckin=d.lastCheckin;
+    if(d.nodeExpiry) nodeExpiry=d.nodeExpiry;
+    if(d.displayName) state.displayName=d.displayName;
+    if(d.xHandle) state.xHandle=d.xHandle;
+    if(d.tiersCompleted) state.tiersCompleted=d.tiersCompleted;
+    if(d.log) activityLog=d.log;
+    if(d.visitors) visitors=d.visitors;
+  }catch(e){}
+}
+
+let userPts=0,streak=0,lastCheckin=0,nodeExpiry=0;
+let activityLog=[];
+let visitors=[];
+loadData();
+
+// Log this visit
+(function(){
+  const v={ts:Date.now(),ua:navigator.userAgent.substring(0,80)};
+  visitors.push(v);
+  if(visitors.length>500) visitors=visitors.slice(-500);
+  saveData();
+})();
 
 // ═══════════════════════════════════════════
-// QUESTION BANK — 28 questions across 4 tiers
+// HUD UPDATE
 // ═══════════════════════════════════════════
-const QUESTIONS=[
-  // ── TIER 1: INITIATE (Foundational) ──
-  {tier:0,q:"What is Ritual Network primarily building?",opts:["A fast Layer 2 for Ethereum","A decentralized execution layer for AI — the first L1 with AI built natively onchain","A centralized AI API marketplace","A new proof-of-work mining protocol"],ans:1,explain:"Ritual is building the first sovereign Layer 1 blockchain with AI functionality embedded directly into the chain — not bolted on, but native."},
-  {tier:0,q:"Which product was Ritual's first released to the public?",opts:["Ritual Chain","Resonance","Infernet","Symphony"],ans:2,explain:"Infernet is Ritual's first product — a lightweight decentralized oracle network (DON) that connects offchain AI computations with onchain smart contracts on any EVM-compatible chain."},
-  {tier:0,q:"Ritual raised how much in total funding?",opts:["$5M","$25M","Over $30M","$100M"],ans:2,explain:"Ritual raised $25M Series A in 2024 from Archetype, Accel, Robot Ventures, and Polychain — totaling $30M+ across all rounds including from Polychain, DeepMind alumni, and Paradigm."},
-  {tier:0,q:"What is the Ritual Foundation?",opts:["The core development team at Ritual Labs","An independent org that leads adoption of Ritual Chain through grants, governance, and community support","A venture capital firm investing in AI projects","A certification body for blockchain developers"],ans:1,explain:"The Ritual Foundation is an independent organization — separate from Ritual Labs — that leads global adoption through grants (Realm), governance, educational resources, and community-driven guidance."},
-  {tier:0,q:"What does EVM++ mean in the context of Ritual?",opts:["A newer version of Ethereum Virtual Machine with AI-specific extensions and precompiles","An overclocked GPU computation model","Ethereum's official upgrade roadmap","A cross-chain bridge protocol"],ans:0,explain:"EVM++ is Ritual's enhanced version of the Ethereum Virtual Machine. It adds AI-specific precompiles and extensions so developers can call LLMs, ZK proofs, and more natively as on-chain operations."},
-  {tier:0,q:"What is 'Realm' in the Ritual ecosystem?",opts:["A multiplayer blockchain game","Ritual's no-deadline grants and full-stack support program for builders","The name of Ritual's testnet","A decentralized storage layer"],ans:1,explain:"Realm is Ritual Foundation's builder program — offering open-ended grants, technical support, and resources to developers building autonomous AI agents, smart DeFi, and dApps on Ritual."},
-  {tier:0,q:"Who can access Ritual's public testnet?",opts:["Only invited developers","Only token holders","Everyone — it is fully open to the public","Only node operators"],ans:2,explain:"Ritual's public testnet is 100% open. Anyone can visit faucet.ritualfoundation.org, claim testnet tokens, spin up nodes, and start building or testing immediately."},
-
-  // ── TIER 2: AWAKENED (Architecture) ──
-  {tier:1,q:"What is 'Resonance' in Ritual's architecture?",opts:["A community Discord server","Ritual's state-of-the-art fee mechanism that creates a two-sided marketplace between compute providers and users","A ZK proof system for AI model verification","A cross-chain messaging protocol"],ans:1,explain:"Resonance is Ritual's novel transaction fee mechanism that efficiently matches supply and demand for heterogeneous computation — including AI inference, ZK proofs, and more — using a two-sided auction market."},
-  {tier:1,q:"What is 'Symphony' in the Ritual stack?",opts:["A music NFT platform on Ritual","Ritual's consensus protocol using dual proof sharding and an Execute-Once-Verify-Many-Times (EOVMT) model","A smart contract language for AI agents","The name for Ritual's token economics"],ans:1,explain:"Symphony is Ritual's consensus protocol that uses Execute-Once-Verify-Many-Times (EOVMT), dual proof sharding, and optimal sampling to reduce replicated execution and enable high-performance AI workloads onchain."},
-  {tier:1,q:"What are TEEs in the context of Ritual?",opts:["Transaction Efficiency Engines — tools that speed up gas fees","Trusted Execution Environments — secure hardware enclaves where AI inference runs with cryptographic attestation","Token Exchange Endpoints for cross-chain swaps","Technical Evaluation Engines for auditing smart contracts"],ans:1,explain:"TEEs (Trusted Execution Environments) like Intel SGX and AWS Nitro Enclaves run AI models inside secure hardware enclaves. Prompts and responses stay encrypted, and results settle onchain with cryptographic proof in the same transaction."},
-  {tier:1,q:"How does Ritual handle AI model verification — what options does it support?",opts:["Only centralized verification by Ritual Labs","Only ZK proofs","Proof-system agnostic: developers can choose ZK (ZKML), Optimistic (OPML), or TEE-based verification depending on their needs","Only optimistic rollup-style fraud proofs"],ans:2,explain:"Ritual is proof-system agnostic. Developers can select ZKML (cryptographic ZK guarantees), OPML (optimistic with dispute resolution), or TEEs (hardware-level isolation) — choosing the right trade-off of cost, speed, and security."},
-  {tier:1,q:"What is 'Infernet' designed to do?",opts:["Run a centralized AI API gateway","Act as a lightweight library connecting offchain AI computations with onchain smart contracts on any EVM chain","Provide decentralized storage for AI model weights","Mine blocks using AI-powered hardware"],ans:1,explain:"Infernet is a lightweight bridge — it enables any EVM-compatible dApp to request AI computations from offchain nodes and receive verifiable results onchain, without trusting a centralized provider."},
-  {tier:1,q:"What type of blockchain is the Ritual Chain?",opts:["A Layer 2 rollup on Ethereum","A sovereign Layer 1 blockchain purpose-built for AI and heterogeneous computation","A sidechain of Solana","A parachain on Polkadot"],ans:1,explain:"Ritual Chain is a sovereign Layer 1 blockchain — not a rollup or sidechain — built from scratch with AI-native primitives, node specialization, and novel consensus (Symphony) and fee mechanisms (Resonance)."},
-  {tier:1,q:"Approximately how many dApps were built on Ritual's testnet in just the first weeks after opening?",opts:["5 dApps","50+ dApps","Over 500 dApps","Only 2 dApps"],ans:1,explain:"Over 50 decentralized applications were built in just weeks of Ritual's public testnet — a remarkable pace that reflects the strength, hunger, and quality of the Ritual builder community."},
-
-  // ── TIER 3: SAGE (Deep Protocol) ──
-  {tier:2,q:"What is 'vTune' in the Ritual research stack?",opts:["A node monitoring dashboard tool","A dual provenance and computational integrity gadget for LLM fine-tuning using watermarking and ZK proofs","A validator tuning algorithm for Resonance","An onchain music NFT protocol"],ans:1,explain:"vTune is Ritual's research gadget that provides dual provenance — both watermarking and ZK proof techniques — to verify that an AI model was fine-tuned correctly, enabling trustworthy model marketplaces onchain."},
-  {tier:2,q:"How do autonomous agents on Ritual handle scheduling?",opts:["They require human operators to manually trigger every action","They use keeper bots deployed on Ethereum","They register recurring execution natively at the block proposer level — no keeper bots needed","They rely on Chainlink Automation for scheduled tasks"],ans:2,explain:"Ritual has native scheduled execution — agents register tasks directly with the block proposer to run every N blocks, on a timer, or based on a condition. No external keeper bots or cron jobs needed. It's enshrined at the protocol level."},
-  {tier:2,q:"What unique capability does Ritual give to smart contracts that no other major L1 offers today?",opts:["Smart contracts that can own NFTs","Smart contracts that can think — calling LLMs, running multimodal AI, making verifiable decisions, and persisting as autonomous agents forever onchain","Smart contracts that auto-bridge to all EVM chains","Smart contracts that earn staking rewards automatically"],ans:1,explain:"Ritual allows smart contracts to natively call LLMs, multimodal models, ZK proofs, and FHE — all as precompile operations. Agents built this way can run indefinitely onchain, hold their own keys, and operate without human intervention."},
-  {tier:2,q:"What does Ritual's chain abstraction sidecar enable?",opts:["Bridging tokens between Ethereum and Solana","Verified AI computations across different blockchains — enabling cross-chain AI-powered dApps without custom oracle infrastructure","Running AI models on mobile devices","Translating Solidity code to Rust automatically"],ans:1,explain:"The chain abstraction sidecar enables Infernet to deliver verified AI results across multiple blockchains — allowing developers to build cross-chain AI dApps that maintain security and verifiability without building custom oracle infrastructure per chain."},
-  {tier:2,q:"What is 'OPML' — Optimistic Machine Learning — in the context of Ritual?",opts:["A new AI model format that reduces inference costs by 50%","A verification approach inspired by optimistic rollups — model execution is accepted optimistically, with model bisection-based verification triggered only in disputes","An oracle protocol for pulling ML model prices onchain","A governance mechanism for the Ritual DAO"],ans:1,explain:"OPML is Ritual's optimistic approach to ML verification — inspired by optimistic rollups. Results are accepted by default; if disputed, a bisection-based verification process is triggered. This trades strong guarantees for lower cost in certain use cases."},
-  {tier:2,q:"What is the Monotone Priority System in Ritual?",opts:["A fee ordering system ensuring higher-paying transactions always execute first (monotone by price)","A node specialization protocol for prioritizing compute tasks based on capability matching and network ordering rules, introduced January 2026","A voting mechanism for Ritual DAO governance proposals","A token distribution model for early validators"],ans:1,explain:"The Monotone Priority System (Jan 2026) is Ritual's protocol for ordering and prioritizing compute tasks across specialized nodes in a way that is fair, capability-matched, and resistant to manipulation — a key piece of the node specialization architecture."},
-  {tier:2,q:"What development tools does Ritual support for builders?",opts:["Only a custom Ritual-specific SDK with no Ethereum tooling compatibility","Standard Ethereum tools like Hardhat and Foundry work out of the box, plus Ritual-specific SDKs, Agent Launchpad, and EVM++ dev kit","Only Python-based tools via the Ritual Python SDK","Only JavaScript/TypeScript, no Solidity support"],ans:1,explain:"Ritual is fully EVM-compatible — Hardhat, Foundry, ethers.js all work. On top of this, Ritual adds its own Agent Launchpad, EVM++ dev kit, specialized sidecars, and AI model SDKs, letting any Ethereum developer port dApps seamlessly while accessing AI-native features."},
-
-  // ── TIER 4: GRAND RITUALIST (Mastery) ──
-  {tier:3,q:"What is the long-term vision Ritual has for autonomous agents?",opts:["AI agents that assist humans in writing smart contracts but always require human approval","Autonomous agents that persist onchain indefinitely, hold their own keys, schedule their own execution, accumulate financial sovereignty, and operate independent of any human controller","AI chatbots integrated into Ethereum wallets","Agents that optimize gas fees for existing protocols"],ans:1,explain:"Ritual's docs explicitly describe agents that 'survive crashes without human intervention,' 'hold their own keys,' and 'accrue both financial and computational sovereignty' — a vision of truly emancipated machine intelligence living onchain permanently."},
-  {tier:3,q:"What is the Ritual Testnet faucet URL?",opts:["testnet.ritual.net/faucet","faucet.ritual.ai","faucet.ritualfoundation.org","ritualfaucet.vercel.app"],ans:2,explain:"The official Ritual testnet faucet is at faucet.ritualfoundation.org — connect your wallet or paste your address to claim testnet RITUAL tokens and start building or testing immediately."},
-  {tier:3,q:"What are 'ritual-dapp-skills' and how do they work?",opts:["A set of achievement badges for completing Ritual quests","Markdown instruction files that teach AI coding agents (like Claude Code, Cursor, Codex) how to build dApps on Ritual — precompiles, contract patterns, deployment pipeline — so agents can build apps autonomously","A Solidity library for importing Ritual precompiles","A governance skill tree for Ritual DAO voters"],ans:1,explain:"ritual-dapp-skills are markdown skill files that any AI coding agent reads to understand Ritual's full stack. Compatible with Claude Code, Cursor, Codex, and others — enabling AI agents to autonomously architect, build, and deploy dApps on Ritual Chain."},
-  {tier:3,q:"What makes Ritual's approach to API calls from smart contracts unique?",opts:["Contracts can call any Web2 API directly via a built-in HTTP bridge with no verification","External APIs are called inside TEE enclaves with cryptographic attestation, no separate oracle infrastructure needed, and API credentials never appear on-chain","Ritual uses Chainlink for all external data feeds with standard oracle security","Contracts access APIs through a centralized Ritual-run gateway for compliance"],ans:1,explain:"On Ritual, agents call external APIs directly inside TEEs — price feeds, social data, payment rails — with cryptographic attestation on results. No separate oracle infrastructure, no exposed credentials on-chain, and no intermediary trust assumptions."},
-  {tier:3,q:"What is Ritual's stated approach to being 'proof-system neutral'?",opts:["Ritual has chosen ZK proofs as the one true verification method for all computations","Ritual recognizes that different applications need different security/cost/performance trade-offs, so it stays neutral — supporting ZKML, OPML, TEEs, and FHE as modular options developers can compose freely","Ritual delegates proof selection to a DAO vote every quarter","Ritual uses only optimistic proofs because they are cheapest"],ans:1,explain:"Ritual explicitly stays proof-system agnostic — developers choose from ZKML, OPML, TEE, or FHE based on their app's needs. This neutrality is intentional: Ritual sees itself as the infrastructure layer that enables all proof systems, not a bet on one winning approach."},
-  {tier:3,q:"Which investors and institutions are represented in Ritual's team background?",opts:["Mostly academic researchers from MIT and Stanford with no industry background","Operators and investors from Polychain, DeepMind, Paradigm, Coinbase, Citadel, and Palantir","Exclusively former Ethereum Foundation engineers","A mix of Solana and Avalanche ecosystem alumni"],ans:1,explain:"Ritual's founding team has backgrounds spanning Polychain Capital, DeepMind, Paradigm, Coinbase, Citadel, and Palantir — bringing both deep crypto infrastructure expertise and world-class AI/ML research experience to build this protocol."},
-  {tier:3,q:"What is the Ritual Foundation's call-to-action for builders right now?",opts:["Wait for mainnet before building — the testnet is not open","Apply to Realm for grants and support, build on the public testnet now, spin up nodes, and be part of the early ecosystem before mainnet launches","Purchase a Ritual developer license for $5000","Submit a whitepaper to be reviewed by the team for approval"],ans:1,explain:"The Ritual Foundation actively invites builders NOW — apply to Realm (no deadline, no expiry), use the public testnet, claim faucet tokens, spin up nodes. The window to be early and shape the ecosystem before mainnet is open. This is the moment."},
-];
+function updateHUD(){
+  document.getElementById('hud-pts').textContent=userPts;
+  document.getElementById('hud-streak').textContent=streak+'🔥';
+  if(state.walletAddr){
+    const a=state.walletAddr;
+    document.getElementById('hud-wallet-text').textContent=a.slice(0,6)+'...'+a.slice(-4);
+  }
+}
 
 // ═══════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════
-async function connectWallet(){
+async function connectWalletGlobal(){
   if(typeof window.ethereum==='undefined'){
     showToast('No wallet detected. Install MetaMask or Rabby 🦊');
     return;
@@ -616,71 +1252,400 @@ async function connectWallet(){
     const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
     state.walletAddr=accounts[0];
     updateWalletUI();
+    updateHUD();
     showToast('Wallet connected ✓');
   }catch(e){
     showToast('Connection cancelled');
   }
 }
-
 function updateWalletUI(){
   const dot=document.getElementById('wallet-dot');
   const label=document.getElementById('wallet-label');
   const btn=document.getElementById('wallet-btn');
   const display=document.getElementById('wallet-display');
   const addrEl=document.getElementById('wallet-addr-display');
-  if(state.walletAddr){
+  if(dot&&state.walletAddr){
     dot.classList.add('connected');
-    const addr=state.walletAddr;
-    label.textContent='Wallet connected';
-    label.style.color='var(--green)';
+    label.textContent='Wallet connected';label.style.color='var(--green)';
     btn.textContent='Change';
     display.style.display='block';
-    addrEl.textContent=addr.slice(0,6)+'...'+addr.slice(-4);
+    addrEl.textContent=state.walletAddr.slice(0,6)+'...'+state.walletAddr.slice(-4);
   }
 }
+window.addEventListener('load',async()=>{
+  if(typeof window.ethereum!=='undefined'){
+    try{
+      const accounts=await window.ethereum.request({method:'eth_accounts'});
+      if(accounts.length>0){state.walletAddr=accounts[0];updateWalletUI();updateHUD();}
+    }catch(e){}
+  }
+  updateHUD();
+  initCheckin();
+  renderCockpitNode();
+  renderNFTs();
+  renderNews();
+  renderDapps();
+  renderLeaderboard();
+  updateQuizProgressLabel();
+  if(state.displayName){
+    document.getElementById('display-name').value=state.displayName;
+    if(state.xHandle) document.getElementById('x-input').value=state.xHandle;
+  }
+});
 
 // ═══════════════════════════════════════════
-// X PROFILE LOOKUP
+// X PROFILE LOOKUP — with error handling
 // ═══════════════════════════════════════════
 async function lookupX(){
-  const handle=document.getElementById('x-input').value.trim().replace('@','');
+  const raw=document.getElementById('x-input').value.trim();
+  const handle=raw.replace('@','');
   if(!handle){showToast('Enter your X username first');return;}
-  state.xHandle=handle;
-
-  // Try unavatar for avatar
+  
+  document.getElementById('x-error').classList.remove('show');
+  document.getElementById('x-profile-card').classList.remove('show');
+  
+  // Validate handle format
+  if(!/^[a-zA-Z0-9_]{1,15}$/.test(handle)){
+    document.getElementById('x-error').classList.add('show');
+    return;
+  }
+  
   const avatarUrl=`https://unavatar.io/twitter/${handle}`;
-  const profileCard=document.getElementById('x-profile-card');
-  const avatar=document.getElementById('x-avatar');
-  const nameEl=document.getElementById('x-name');
-  const handleEl=document.getElementById('x-handle');
-  const bioEl=document.getElementById('x-bio');
-  const displayNameInput=document.getElementById('display-name');
-
-  avatar.src=avatarUrl;
-  nameEl.textContent=handle;
-  handleEl.textContent='@'+handle;
-  bioEl.textContent='✦ Ritual Ecosystem Member';
-  profileCard.style.display='flex';
-
-  if(!displayNameInput.value) displayNameInput.value=handle;
-  showToast('Profile loaded from X ✓');
+  const img=new Image();
+  
+  img.onload=function(){
+    // Check if it returned a real image (unavatar returns 1x1 pixel on failure sometimes)
+    if(img.naturalWidth<=1 && img.naturalHeight<=1){
+      document.getElementById('x-error').classList.add('show');
+      return;
+    }
+    document.getElementById('x-avatar').src=avatarUrl;
+    document.getElementById('x-name').textContent=handle;
+    document.getElementById('x-handle').textContent='@'+handle;
+    document.getElementById('x-bio').textContent='✦ Ritual Ecosystem Member';
+    document.getElementById('x-profile-card').classList.add('show');
+    const dn=document.getElementById('display-name');
+    if(!dn.value) dn.value=handle;
+    state.xHandle=handle;
+    showToast('Profile verified ✓');
+  };
+  img.onerror=function(){
+    document.getElementById('x-error').classList.add('show');
+  };
+  img.src=avatarUrl;
 }
-
 function clearXProfile(){
-  document.getElementById('x-profile-card').style.display='none';
+  document.getElementById('x-profile-card').classList.remove('show');
+  document.getElementById('x-error').classList.remove('show');
 }
 
 // ═══════════════════════════════════════════
-// START QUIZ
+// NODE / DAILY CHECK-IN
+// ═══════════════════════════════════════════
+function initCheckin(){
+  updateCheckinUI();
+  setInterval(tickTimer,1000);
+}
+
+function doCheckIn(){
+  const now=Date.now();
+  const oneDayMs=24*60*60*1000;
+  if(lastCheckin && (now-lastCheckin)<oneDayMs){
+    showToast('Node already active! Check in tomorrow.');
+    return;
+  }
+
+  // Calculate streak
+  const twoDaysMs=2*oneDayMs;
+  if(lastCheckin && (now-lastCheckin)<twoDaysMs){
+    streak++;
+  }else{
+    streak=1;
+  }
+  lastCheckin=now;
+  nodeExpiry=now+oneDayMs;
+
+  // Points
+  const base=50;
+  const bonus=streak*10;
+  const total=base+bonus;
+  userPts+=total;
+
+  activityLog.unshift({ts:now,type:'checkin',pts:total,desc:`Daily check-in · ${streak} day streak`});
+  if(activityLog.length>20) activityLog.pop();
+
+  saveData();
+  updateHUD();
+  updateCheckinUI();
+  renderCockpitNode();
+
+  // Confetti
+  confetti({particleCount:80,spread:70,origin:{y:0.6},colors:['#00f5a0','#00b4ff','#ffc82c']});
+  showToast(`🛸 Node activated! +${total} pts (streak bonus +${bonus})`);
+}
+
+function updateCheckinUI(){
+  const now=Date.now();
+  const active=nodeExpiry>now;
+  const orbit=document.getElementById('checkin-orbit');
+  const btn=document.getElementById('checkin-btn');
+  const label=document.getElementById('checkin-timer-label');
+
+  document.getElementById('streak-num').textContent=streak;
+  document.getElementById('total-pts-display').textContent=userPts;
+  document.getElementById('streak-pts-display').textContent=streak*10;
+  document.getElementById('rank-display').textContent=getRank(userPts);
+
+  if(active){
+    orbit&&orbit.classList.add('active-node');
+    if(btn){btn.textContent='✅ NODE ACTIVE';btn.disabled=true;btn.style.opacity='0.7';}
+    if(label) label.textContent='NODE RUNNING — NEXT CHECK-IN';
+  }else{
+    orbit&&orbit.classList.remove('active-node');
+    if(btn){btn.textContent='🛸 ACTIVATE NODE';btn.disabled=false;btn.style.opacity='1';}
+    if(label) label.textContent='NODE OFFLINE — CHECK IN TO START';
+  }
+  renderActivityLog();
+}
+
+function getRank(pts){
+  if(pts>=5000) return 'ORACLE';
+  if(pts>=2000) return 'SAGE';
+  if(pts>=1000) return 'AWAKENED';
+  if(pts>=200) return 'INITIATE';
+  return 'SEEKER';
+}
+
+function tickTimer(){
+  const now=Date.now();
+  const active=nodeExpiry>now;
+  let secs;
+  if(active){
+    secs=Math.max(0,Math.floor((nodeExpiry-now)/1000));
+  }else{
+    secs=0;
+  }
+  const h=Math.floor(secs/3600);
+  const m=Math.floor((secs%3600)/60);
+  const s=secs%60;
+  const str=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const big=document.getElementById('checkin-big-timer');
+  const cockpitTimer=document.getElementById('cockpit-timer');
+  if(big) big.textContent=active?str:'00:00:00';
+  if(cockpitTimer) cockpitTimer.textContent=active?str:'OFFLINE';
+  if(active&&secs===0) updateCheckinUI();
+}
+
+function renderCockpitNode(){
+  const now=Date.now();
+  const active=nodeExpiry>now;
+  const dot=document.getElementById('cockpit-node-dot');
+  const label=document.getElementById('cockpit-node-label');
+  if(dot){dot.className='node-dot '+(active?'active':'inactive');}
+  if(label){label.textContent=active?`Active · ${streak} day streak`:'Offline · Needs check-in';}
+}
+
+function renderActivityLog(){
+  const el=document.getElementById('activity-log');
+  if(!el) return;
+  if(!activityLog.length){
+    el.innerHTML='<div style="color:var(--muted);font-family:Space Mono,monospace;font-size:12px;text-align:center;padding:20px">No activity yet</div>';
+    return;
+  }
+  el.innerHTML=activityLog.slice(0,8).map(a=>{
+    const d=new Date(a.ts);
+    const ds=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <div>
+        <div style="font-size:13px;color:var(--text)">${a.desc}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:Space Mono,monospace;margin-top:2px">${ds}</div>
+      </div>
+      <div style="font-family:Orbitron,monospace;font-size:13px;color:var(--green);font-weight:700">+${a.pts}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// NFT DATA
+// ═══════════════════════════════════════════
+const NFTS=[
+  {name:'Ritual Sage POAPs',creator:'YoungestGrandad',icon:'🔮',desc:'Proof-of-Attendance certificates for Ritual knowledge completion. 4 tiers.',tag:'POAP',link:'https://marvellgregory.github.io/ritual-sage/'},
+  {name:'Ritual Knots',creator:'Community',icon:'⬡',desc:'The iconic Ritual geometric knot logo rendered as unique NFTs on Ritual Chain.',tag:'Art',link:'https://explorer.ritualfoundation.org'},
+  {name:'Infernet Nodes',creator:'Community',icon:'🌐',desc:'NFTs representing node operator status in the Ritual Infernet network.',tag:'Utility',link:'https://explorer.ritualfoundation.org'},
+  {name:'Ritual Founders',creator:'Ritual Foundation',icon:'⚡',desc:'Exclusive collection for early community members and contributors.',tag:'Exclusive',link:'https://twitter.com/ritualfnd'},
+  {name:'AI Agents Genesis',creator:'Ritual Builders',icon:'🤖',desc:'First-ever AI agent NFTs that are autonomous onchain entities on Ritual.',tag:'Cutting Edge',link:'https://explorer.ritualfoundation.org'},
+  {name:'Grand Ritualists',creator:'YoungestGrandad',icon:'🌟',desc:'Soulbound badges for those who complete all 4 Sage tiers. True masters.',tag:'Soulbound',link:'https://marvellgregory.github.io/ritual-sage/'},
+];
+
+function renderNFTs(){
+  const el=document.getElementById('nft-grid');
+  if(!el) return;
+  el.innerHTML=NFTS.map(n=>`
+    <div class="nft-card" onclick="window.open('${n.link}','_blank')">
+      <div class="nft-img">
+        <div class="nft-img-placeholder">${n.icon}</div>
+      </div>
+      <div class="nft-body">
+        <div class="nft-name">${n.name}</div>
+        <div class="nft-creator">by ${n.creator}</div>
+        <div style="font-size:12px;color:var(--muted2);line-height:1.5;margin-bottom:8px">${n.desc}</div>
+        <span class="nft-tag">${n.tag}</span>
+        <a class="nft-link-btn" href="${n.link}" target="_blank">View Collection →</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// NEWS DATA
+// ═══════════════════════════════════════════
+const NEWS=[
+  {date:'May 2025',title:'Ritual Chain Testnet Now Live for All',excerpt:'The public testnet is open to everyone. Claim faucet tokens, deploy contracts, and start building onchain AI applications today.',tag:'TESTNET',link:'https://ritualfoundation.org'},
+  {date:'Apr 2025',title:'Realm Grants Program Open — No Deadline',excerpt:'Apply to Realm, Ritual Foundation\'s builder support program. Open-ended grants with full technical and operational support for dApps.',tag:'GRANTS',link:'https://ritualfoundation.org/blog/introducing-ritual-foundation'},
+  {date:'Mar 2025',title:'Unveiling Ritual: Full Architecture Revealed',excerpt:'The Ritual Chain architecture is now fully public. Symphony consensus, Resonance fee mechanism, EVM++, and native AI precompiles explained.',tag:'ARCHITECTURE',link:'https://ritualfoundation.com/blog/unveiling-ritual'},
+  {date:'Feb 2025',title:'50+ dApps Built in Weeks on Ritual Testnet',excerpt:'An incredible burst of builder activity — over 50 decentralized applications built in just the opening weeks of testnet availability.',tag:'ECOSYSTEM',link:'https://ritualfoundation.org'},
+  {date:'Nov 2024',title:'Ritual Foundation Officially Launches',excerpt:'The independent Ritual Foundation launches to lead global adoption through grants, governance, education, and community-driven guidance.',tag:'LAUNCH',link:'https://ritualfoundation.org/blog/introducing-ritual-foundation'},
+];
+
+function renderNews(){
+  const el=document.getElementById('news-grid');
+  if(!el) return;
+  el.innerHTML=NEWS.map(n=>`
+    <div class="news-item" onclick="window.open('${n.link}','_blank')">
+      <div class="news-dot"></div>
+      <div style="flex:1">
+        <div class="news-date">${n.date}</div>
+        <div class="news-title">${n.title}</div>
+        <div class="news-excerpt">${n.excerpt}</div>
+        <span class="news-tag">${n.tag}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// DAPPS DATA
+// ═══════════════════════════════════════════
+const DAPPS=[
+  {name:'Ritual Explorer',desc:'Block explorer for the Ritual Chain testnet. View transactions, contracts, and NFTs.',icon:'🔍',cat:'EXPLORER',link:'https://explorer.ritualfoundation.org'},
+  {name:'Ritual Faucet',desc:'Claim free testnet RITUAL tokens to start building or testing on Ritual Chain.',icon:'💧',cat:'FAUCET',link:'https://faucet.ritualfoundation.org'},
+  {name:'Ritual Docs',desc:'Complete technical documentation for building on Ritual — Infernet, EVM++, agents.',icon:'📚',cat:'DOCS',link:'https://ritualfoundation.org/docs/overview/what-is-ritual'},
+  {name:'Ritual Sage',desc:'Onchain knowledge quiz with 4 tiers and POAP minting on Ritual Chain. Built by YoungestGrandad.',icon:'🧙',cat:'COMMUNITY',link:'https://marvellgregory.github.io/ritual-sage/'},
+  {name:'Realm Grants',desc:'Apply for grants to build on Ritual Chain. No deadlines. Full-stack builder support.',icon:'💰',cat:'GRANTS',link:'https://ritualfoundation.org'},
+  {name:'Ritual GitHub',desc:'Open source repositories for Ritual Foundation — smart contracts, SDKs, tools.',icon:'⚙️',cat:'DEV',link:'https://github.com/ritual-foundation'},
+  {name:'Ritual Discord',desc:'Official community server. Get support, share builds, meet the team.',icon:'💬',cat:'COMMUNITY',link:'https://discord.gg/ritual-net'},
+  {name:'Ritual Twitter',desc:'Follow @ritualfnd for announcements, ecosystem updates, and opportunities.',icon:'📢',cat:'SOCIAL',link:'https://twitter.com/ritualfnd'},
+];
+
+function renderDapps(){
+  const el=document.getElementById('dapp-list');
+  if(!el) return;
+  el.innerHTML=DAPPS.map(d=>`
+    <a class="dapp-item" href="${d.link}" target="_blank">
+      <div class="dapp-icon-wrap">${d.icon}</div>
+      <div>
+        <div class="dapp-name">${d.name}</div>
+        <div class="dapp-desc">${d.desc}</div>
+        <div class="dapp-category">${d.cat}</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// LEADERBOARD (local + sample data)
+// ═══════════════════════════════════════════
+const SAMPLE_LB=[
+  {name:'YoungestGrandad',pts:4200,badge:'🌟'},
+  {name:'RitualBuidler',pts:3800,badge:'⚡'},
+  {name:'OnchainSage',pts:3200,badge:'🔮'},
+  {name:'CryptoRitualist',pts:2900,badge:'🌿'},
+  {name:'Web3Wizard',pts:2400,badge:'⬡'},
+];
+
+function renderLeaderboard(){
+  const el=document.getElementById('lb-wrap');
+  if(!el) return;
+  // Merge user into sample
+  let lb=[...SAMPLE_LB];
+  if(userPts>0 && state.displayName){
+    lb.push({name:state.displayName,pts:userPts,badge:'🛸'});
+  }
+  lb.sort((a,b)=>b.pts-a.pts);
+  lb=lb.slice(0,10);
+
+  const rankClasses=['gold','silver','bronze'];
+  const rankSyms=['🥇','🥈','🥉'];
+
+  el.innerHTML=lb.map((m,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank ${rankClasses[i]||''}">${i<3?rankSyms[i]:i+1}</div>
+      <div class="lb-name">${m.name} <span style="font-size:16px">${m.badge||''}</span></div>
+      <div style="font-size:11px;font-family:Space Mono,monospace;color:var(--muted);margin-right:10px">${getRank(m.pts)}</div>
+      <div class="lb-pts">${m.pts.toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// TIER DEFINITIONS
+// ═══════════════════════════════════════════
+const TIERS=[
+  {id:1,name:'Initiate',subname:'of the Ritual',icon:'🌿',color:'#00f5a0',passScore:5},
+  {id:2,name:'Awakened',subname:'Ritual Awakened',icon:'⚡',color:'#00b4ff',passScore:5},
+  {id:3,name:'Sage',subname:'Ritual Sage',icon:'🔮',color:'#b47fff',passScore:5},
+  {id:4,name:'Grand Ritualist',subname:'Master of Ritual',icon:'🌟',color:'#ffc82c',passScore:5},
+];
+
+// ═══════════════════════════════════════════
+// QUESTION BANK
+// ═══════════════════════════════════════════
+const QUESTIONS=[
+  {tier:0,q:"What is Ritual Network primarily building?",opts:["A fast Layer 2 for Ethereum","A decentralized execution layer for AI — the first L1 with AI built natively onchain","A centralized AI API marketplace","A new proof-of-work mining protocol"],ans:1,explain:"Ritual is building the first sovereign Layer 1 blockchain with AI functionality embedded directly into the chain — not bolted on, but native."},
+  {tier:0,q:"Which product was Ritual's first released to the public?",opts:["Ritual Chain","Resonance","Infernet","Symphony"],ans:2,explain:"Infernet is Ritual's first product — a lightweight decentralized oracle network (DON) that connects offchain AI computations with onchain smart contracts on any EVM-compatible chain."},
+  {tier:0,q:"What is the Ritual Foundation?",opts:["The core dev team at Ritual Labs","An independent org that leads adoption of Ritual Chain through grants, governance, and community support","A venture capital firm investing in AI","A certification body for blockchain developers"],ans:1,explain:"The Ritual Foundation is an independent organization — separate from Ritual Labs — that leads global adoption through grants (Realm), governance, educational resources, and community-driven guidance."},
+  {tier:0,q:"What does EVM++ mean in the context of Ritual?",opts:["A newer version of the EVM with AI-specific extensions and precompiles","An overclocked GPU computation model","Ethereum's official upgrade roadmap","A cross-chain bridge protocol"],ans:0,explain:"EVM++ is Ritual's enhanced version of the Ethereum Virtual Machine. It adds AI-specific precompiles so developers can call LLMs, ZK proofs, and more natively as on-chain operations."},
+  {tier:0,q:"What is 'Realm' in the Ritual ecosystem?",opts:["A multiplayer blockchain game","Ritual's no-deadline grants and full-stack support program for builders","The name of Ritual's testnet","A decentralized storage layer"],ans:1,explain:"Realm is Ritual Foundation's builder program — offering open-ended grants, technical support, and resources to developers building on Ritual."},
+  {tier:0,q:"Who can access Ritual's public testnet?",opts:["Only invited developers","Only token holders","Everyone — it is fully open to the public","Only node operators"],ans:2,explain:"Ritual's public testnet is 100% open. Anyone can visit faucet.ritualfoundation.org, claim testnet tokens, spin up nodes, and start building."},
+  {tier:0,q:"What is the Ritual testnet faucet URL?",opts:["testnet.ritual.net/faucet","faucet.ritual.ai","faucet.ritualfoundation.org","ritualfaucet.vercel.app"],ans:2,explain:"The official Ritual testnet faucet is at faucet.ritualfoundation.org — connect your wallet or paste your address to claim testnet RITUAL tokens."},
+
+  {tier:1,q:"What is 'Resonance' in Ritual's architecture?",opts:["A community Discord server","Ritual's fee mechanism creating a two-sided marketplace between compute providers and users","A ZK proof system for AI model verification","A cross-chain messaging protocol"],ans:1,explain:"Resonance is Ritual's novel transaction fee mechanism that efficiently matches supply and demand for heterogeneous computation using a two-sided auction market."},
+  {tier:1,q:"What is 'Symphony' in the Ritual stack?",opts:["A music NFT platform on Ritual","Ritual's consensus protocol using dual proof sharding and an EOVMT model","A smart contract language for AI agents","The name for Ritual's token economics"],ans:1,explain:"Symphony is Ritual's consensus protocol that uses Execute-Once-Verify-Many-Times (EOVMT), dual proof sharding, and optimal sampling to reduce replicated execution and enable high-performance AI workloads onchain."},
+  {tier:1,q:"What are TEEs in the context of Ritual?",opts:["Transaction Efficiency Engines","Trusted Execution Environments — secure hardware enclaves where AI inference runs with cryptographic attestation","Token Exchange Endpoints for cross-chain swaps","Technical Evaluation Engines for auditing"],ans:1,explain:"TEEs (Trusted Execution Environments) like Intel SGX and AWS Nitro Enclaves run AI models inside secure hardware enclaves. Results settle onchain with cryptographic proof."},
+  {tier:1,q:"How does Ritual handle AI model verification?",opts:["Only centralized verification by Ritual Labs","Only ZK proofs","Proof-system agnostic: developers choose ZK (ZKML), Optimistic (OPML), or TEE-based verification","Only optimistic rollup-style fraud proofs"],ans:2,explain:"Ritual is proof-system agnostic. Developers can select ZKML, OPML, or TEEs — choosing the right trade-off of cost, speed, and security."},
+  {tier:1,q:"What is 'Infernet' designed to do?",opts:["Run a centralized AI API gateway","Connect offchain AI computations with onchain smart contracts on any EVM chain","Provide decentralized storage for AI model weights","Mine blocks using AI-powered hardware"],ans:1,explain:"Infernet is a lightweight bridge — it enables any EVM-compatible dApp to request AI computations from offchain nodes and receive verifiable results onchain."},
+  {tier:1,q:"What type of blockchain is Ritual Chain?",opts:["A Layer 2 rollup on Ethereum","A sovereign Layer 1 blockchain purpose-built for AI and heterogeneous computation","A sidechain of Solana","A parachain on Polkadot"],ans:1,explain:"Ritual Chain is a sovereign Layer 1 blockchain — not a rollup or sidechain — built from scratch with AI-native primitives, novel consensus (Symphony) and fee mechanisms (Resonance)."},
+  {tier:1,q:"Approximately how many dApps were built on Ritual's testnet in just the first weeks?",opts:["5 dApps","50+ dApps","Over 500 dApps","Only 2 dApps"],ans:1,explain:"Over 50 decentralized applications were built in just weeks of Ritual's public testnet — a remarkable pace that reflects the strength of the Ritual builder community."},
+
+  {tier:2,q:"What is 'vTune' in the Ritual research stack?",opts:["A node monitoring dashboard","A dual provenance gadget for LLM fine-tuning using watermarking and ZK proofs","A validator tuning algorithm for Resonance","An onchain music NFT protocol"],ans:1,explain:"vTune is Ritual's research gadget that provides dual provenance — both watermarking and ZK proof techniques — to verify that an AI model was fine-tuned correctly."},
+  {tier:2,q:"How do autonomous agents on Ritual handle scheduling?",opts:["They require human operators to manually trigger every action","They use keeper bots on Ethereum","They register recurring execution natively at the block proposer level — no keeper bots needed","They rely on Chainlink Automation"],ans:2,explain:"Ritual has native scheduled execution — agents register tasks directly with the block proposer. No external keeper bots or cron jobs needed. It's enshrined at the protocol level."},
+  {tier:2,q:"What unique capability does Ritual give smart contracts?",opts:["Smart contracts that can own NFTs","Smart contracts that can think — calling LLMs, running multimodal AI, making verifiable decisions, and persisting as autonomous agents forever onchain","Smart contracts that auto-bridge to all EVM chains","Smart contracts that earn staking rewards automatically"],ans:1,explain:"Ritual allows smart contracts to natively call LLMs, multimodal models, ZK proofs, and FHE — all as precompile operations. Agents can run indefinitely onchain."},
+  {tier:2,q:"What is 'OPML' — Optimistic Machine Learning — in Ritual?",opts:["A new AI model format reducing inference costs","A verification approach — execution is accepted optimistically, with model bisection-based verification triggered only in disputes","An oracle protocol for ML model prices","A governance mechanism for the Ritual DAO"],ans:1,explain:"OPML is Ritual's optimistic approach to ML verification — results are accepted by default; if disputed, a bisection-based verification process is triggered. This trades strong guarantees for lower cost."},
+  {tier:2,q:"What is the Monotone Priority System in Ritual?",opts:["A fee ordering system by price","A node specialization protocol for prioritizing compute tasks based on capability matching, introduced January 2026","A voting mechanism for Ritual DAO","A token distribution model for early validators"],ans:1,explain:"The Monotone Priority System (Jan 2026) is Ritual's protocol for ordering and prioritizing compute tasks across specialized nodes in a fair, capability-matched way."},
+  {tier:2,q:"What development tools does Ritual support?",opts:["Only a custom Ritual-specific SDK","Standard Ethereum tools like Hardhat and Foundry work out of the box, plus Ritual-specific SDKs, Agent Launchpad, and EVM++ dev kit","Only Python-based tools","Only JavaScript/TypeScript"],ans:1,explain:"Ritual is fully EVM-compatible — Hardhat, Foundry, ethers.js all work. On top of this, Ritual adds its own Agent Launchpad, EVM++ dev kit, and AI model SDKs."},
+  {tier:2,q:"What does Ritual's chain abstraction sidecar enable?",opts:["Bridging tokens between Ethereum and Solana","Verified AI computations across different blockchains — enabling cross-chain AI-powered dApps without custom oracle infrastructure","Running AI models on mobile devices","Translating Solidity to Rust automatically"],ans:1,explain:"The chain abstraction sidecar enables Infernet to deliver verified AI results across multiple blockchains — allowing developers to build cross-chain AI dApps with security and verifiability."},
+
+  {tier:3,q:"What is the long-term vision Ritual has for autonomous agents?",opts:["AI agents that always require human approval","Autonomous agents that persist onchain indefinitely, hold their own keys, schedule their own execution, accumulate financial sovereignty, and operate independent of any human controller","AI chatbots integrated into Ethereum wallets","Agents that optimize gas fees for existing protocols"],ans:1,explain:"Ritual's docs explicitly describe agents that 'survive crashes without human intervention,' 'hold their own keys,' and 'accrue both financial and computational sovereignty.'"},
+  {tier:3,q:"What are 'ritual-dapp-skills' and how do they work?",opts:["Achievement badges for completing Ritual quests","Markdown instruction files that teach AI coding agents (Claude Code, Cursor, Codex) how to build dApps on Ritual autonomously","A Solidity library for Ritual precompiles","A governance skill tree for Ritual DAO voters"],ans:1,explain:"ritual-dapp-skills are markdown skill files that any AI coding agent reads to understand Ritual's full stack. Compatible with Claude Code, Cursor, Codex — enabling AI agents to autonomously build and deploy dApps on Ritual Chain."},
+  {tier:3,q:"What makes Ritual's approach to API calls from smart contracts unique?",opts:["Contracts call any Web2 API directly via a built-in HTTP bridge with no verification","External APIs are called inside TEE enclaves with cryptographic attestation, no separate oracle infrastructure, and credentials never appear on-chain","Ritual uses Chainlink for all external data feeds","Contracts access APIs through a centralized Ritual-run gateway"],ans:1,explain:"On Ritual, agents call external APIs directly inside TEEs — price feeds, social data, payment rails — with cryptographic attestation on results. No separate oracle infrastructure needed."},
+  {tier:3,q:"What is Ritual's stated approach to being 'proof-system neutral'?",opts:["Ritual chose ZK proofs as the one true verification method","Ritual stays neutral — supporting ZKML, OPML, TEEs, and FHE as modular options developers can compose freely","Ritual delegates proof selection to a DAO vote","Ritual uses only optimistic proofs because they are cheapest"],ans:1,explain:"Ritual explicitly stays proof-system agnostic — developers choose from ZKML, OPML, TEE, or FHE based on their app's needs. Ritual sees itself as infrastructure for all proof systems."},
+  {tier:3,q:"Which investors and institutions are in Ritual's team background?",opts:["Mostly academic researchers from MIT and Stanford","Operators and investors from Polychain, DeepMind, Paradigm, Coinbase, Citadel, and Palantir","Exclusively former Ethereum Foundation engineers","A mix of Solana and Avalanche ecosystem alumni"],ans:1,explain:"Ritual's founding team has backgrounds spanning Polychain Capital, DeepMind, Paradigm, Coinbase, Citadel, and Palantir — bringing deep crypto infrastructure and world-class AI/ML research expertise."},
+  {tier:3,q:"What is the Ritual Foundation's call-to-action for builders right now?",opts:["Wait for mainnet before building","Apply to Realm for grants, build on the public testnet now, spin up nodes, and be part of the early ecosystem before mainnet","Purchase a Ritual developer license","Submit a whitepaper for team approval"],ans:1,explain:"The Ritual Foundation actively invites builders NOW — apply to Realm (no deadline, no expiry), use the public testnet, claim faucet tokens, spin up nodes. The window to be early and shape the ecosystem is open."},
+  {tier:3,q:"What Ritual Chain block explorer URL is used to verify transactions?",opts:["explorer.ritual.net","scan.ritualfoundation.org","explorer.ritualfoundation.org","ritual-explorer.vercel.app"],ans:2,explain:"The official Ritual Chain block explorer is at explorer.ritualfoundation.org — you can verify all transactions, NFTs, and contracts here."},
+];
+
+// ═══════════════════════════════════════════
+// QUIZ LOGIC
 // ═══════════════════════════════════════════
 function startQuiz(){
   const name=document.getElementById('display-name').value.trim();
   if(!name){showToast('Enter your display name first!');return;}
   state.displayName=name;
-  state.xHandle=document.getElementById('x-input').value.trim().replace('@','') || name;
+  state.xHandle=document.getElementById('x-input').value.trim().replace('@','')||name;
   state.currentTier=0;
   state.tiersCompleted=[];
   state.allTierScores=[];
+  saveData();
   beginTier(0);
 }
 
@@ -689,74 +1654,54 @@ function beginTier(tierIdx){
   state.currentQ=0;
   state.score=0;
   state.answers=[];
-
   const tier=TIERS[tierIdx];
   const badge=document.getElementById('tier-badge');
   badge.textContent=`${tier.icon} Tier ${tier.id} · ${tier.name}`;
-  badge.style.background=`${tier.color}22`;
-  badge.style.border=`1px solid ${tier.color}55`;
+  badge.style.borderColor=tier.color+'44';
   badge.style.color=tier.color;
-
-  // Build live score dots
   const ls=document.getElementById('live-score');
   ls.innerHTML='';
   for(let i=0;i<7;i++){
     const d=document.createElement('div');d.className='score-dot';d.id=`dot-${i}`;ls.appendChild(d);
   }
-
   showScreen('screen-quiz');
   renderQuestion();
 }
 
-// ═══════════════════════════════════════════
-// RENDER QUESTION
-// ═══════════════════════════════════════════
-function getTierQuestions(tierIdx){
-  return QUESTIONS.filter(q=>q.tier===tierIdx);
-}
+function getTierQuestions(tierIdx){return QUESTIONS.filter(q=>q.tier===tierIdx)}
 
 function renderQuestion(){
   const qs=getTierQuestions(state.currentTier);
   const q=qs[state.currentQ];
   const total=qs.length;
-  const pct=((state.currentQ)/total)*100;
-
-  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-fill').style.width=((state.currentQ)/total*100)+'%';
   document.getElementById('q-counter').textContent=`Question ${state.currentQ+1} of ${total}`;
   document.getElementById('q-num').textContent=`QUESTION ${String(state.currentQ+1).padStart(2,'0')}`;
   document.getElementById('q-text').textContent=q.q;
   document.getElementById('score-display').textContent=`${state.score} / ${state.currentQ}`;
-
   const opts=document.getElementById('options-wrap');
   opts.innerHTML='';
-  const letters=['A','B','C','D'];
-  q.opts.forEach((opt,i)=>{
+  ['A','B','C','D'].forEach((letter,i)=>{
     const btn=document.createElement('button');
     btn.className='option-btn';
-    btn.innerHTML=`<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.innerHTML=`<span class="option-letter">${letter}</span><span>${q.opts[i]}</span>`;
     btn.onclick=()=>selectAnswer(i);
     opts.appendChild(btn);
   });
-
   document.getElementById('feedback-box').className='feedback-box';
   document.getElementById('feedback-box').textContent='';
-  const nb=document.getElementById('next-btn');
-  nb.style.display='none';
+  document.getElementById('next-btn').style.display='none';
 }
 
 function selectAnswer(idx){
   const qs=getTierQuestions(state.currentTier);
   const q=qs[state.currentQ];
   const correct=idx===q.ans;
-
-  // Disable all options
   document.querySelectorAll('.option-btn').forEach((btn,i)=>{
     btn.disabled=true;
     if(i===q.ans) btn.classList.add('correct');
     else if(i===idx&&!correct) btn.classList.add('wrong');
   });
-
-  // Feedback
   const fb=document.getElementById('feedback-box');
   if(correct){
     state.score++;
@@ -766,11 +1711,8 @@ function selectAnswer(idx){
     fb.className='feedback-box show wrong-fb';
     fb.innerHTML=`✗ Not quite. ${q.explain}`;
   }
-
-  // Dot
   const dot=document.getElementById(`dot-${state.currentQ}`);
   if(dot) dot.classList.add(correct?'correct':'wrong');
-
   document.getElementById('score-display').textContent=`${state.score} / ${state.currentQ+1}`;
   state.answers.push({q:state.currentQ,correct});
   document.getElementById('next-btn').style.display='block';
@@ -779,21 +1721,14 @@ function selectAnswer(idx){
 function nextQuestion(){
   const qs=getTierQuestions(state.currentTier);
   state.currentQ++;
-  if(state.currentQ>=qs.length){
-    showTierResult();
-  }else{
-    renderQuestion();
-  }
+  if(state.currentQ>=qs.length) showTierResult();
+  else renderQuestion();
 }
 
-// ═══════════════════════════════════════════
-// TIER RESULT
-// ═══════════════════════════════════════════
 function showTierResult(){
   const tier=TIERS[state.currentTier];
   const passed=state.score>=tier.passScore;
   const total=getTierQuestions(state.currentTier).length;
-
   document.getElementById('pass-content').style.display=passed?'block':'none';
   document.getElementById('fail-content').style.display=passed?'none':'block';
 
@@ -801,21 +1736,23 @@ function showTierResult(){
     state.tiersCompleted.push({tier:state.currentTier,score:state.score});
     state.allTierScores.push(state.score);
 
-    // Fill certificate
+    // Award points
+    const pts=100+(state.score===total?50:0);
+    userPts+=pts;
+    activityLog.unshift({ts:Date.now(),type:'quiz',pts:pts,desc:`Tier ${tier.id} ${tier.name} passed · ${state.score}/${total}`});
+    saveData();
+    updateHUD();
+
     document.getElementById('cert-name').textContent=state.displayName;
     document.getElementById('cert-tier-name').textContent=`${tier.name} ${tier.subname}`;
     document.getElementById('cert-score').textContent=`Score: ${state.score}/${total} · Tier ${tier.id} of 4`;
+    document.getElementById('cert-sym').textContent=tier.icon;
     document.getElementById('cert-seal').textContent=tier.icon;
     document.getElementById('cert-date').textContent=`Certified ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} · Ritual Network Testnet`;
     document.getElementById('result-emoji').textContent=state.score===total?'🏆':'🎉';
     document.getElementById('result-title').textContent=state.score===total?'Perfect Score!':'Tier Passed!';
-    document.getElementById('result-subtitle').textContent=`You scored ${state.score}/${total}. ${tier.icon} ${tier.name} achieved.`;
+    document.getElementById('result-subtitle').textContent=`You scored ${state.score}/${total}. ${tier.icon} ${tier.name} achieved!`;
 
-    // Share text
-    const shareMsg=buildShareMsg(tier,state.score,total);
-    document.getElementById('share-text-preview').textContent=shareMsg;
-
-    // Last tier?
     const nextBtn=document.getElementById('next-tier-btn');
     if(state.currentTier>=3){
       nextBtn.textContent='View Grand Ritual Champion ⭐';
@@ -825,104 +1762,126 @@ function showTierResult(){
       nextBtn.onclick=()=>nextTier();
     }
 
-    confetti({particleCount:100,spread:70,origin:{y:0.6},colors:['#00ff7f','#7c3aed','#f59e0b']});
+    confetti({particleCount:120,spread:80,origin:{y:0.6},colors:['#00f5a0','#00b4ff','#ffc82c','#b47fff']});
+
+    // Tier announcement
+    showAnnouncement(tier, state.score, total);
+    updateQuizProgressLabel();
   }else{
     document.getElementById('fail-detail').textContent=`You scored ${state.score}/${total}. Need ${tier.passScore}/${total} to earn your ${tier.name} certificate. Study the Ritual docs and try again!`;
   }
-
   showScreen('screen-result');
+}
+
+function updateQuizProgressLabel(){
+  const el=document.getElementById('quiz-progress-label');
+  if(el) el.textContent=`${state.tiersCompleted.length} / 4 tiers complete`;
+}
+
+function showAnnouncement(tier, score, total){
+  const isPerf=score===total;
+  document.getElementById('ann-emoji').textContent=isPerf?'🏆':'🎉';
+  document.getElementById('ann-title').textContent=isPerf?`PERFECT SCORE!`:`TIER COMPLETE!`;
+  document.getElementById('ann-name').textContent=state.displayName;
+  document.getElementById('ann-sub').textContent=`${tier.icon} ${tier.name} certified · Score: ${score}/${total}\n+${100+(isPerf?50:0)} points awarded to your hub profile.`;
+  document.getElementById('announce-overlay').classList.add('show');
+}
+function closeAnnouncement(){
+  document.getElementById('announce-overlay').classList.remove('show');
 }
 
 function buildShareMsg(tier,score,total){
   const handle=state.xHandle?`@${state.xHandle}`:'I';
-  return `${tier.icon} ${handle} just earned the "${tier.name}" certificate on The Ritual Sage!\n\nScore: ${score}/${total} · Tier ${tier.id}/4 Complete\n\nTest your @ritualfnd knowledge 👇\nritual-sage.github.io\n\n#RitualNetwork #OnchainAI #Web3 #TheRitualSage`;
+  return `${tier.icon} ${handle} just earned the "${tier.name}" certificate on The Ritual Sage!\n\nScore: ${score}/${total} · Tier ${tier.id}/4 Complete\n\nTest your @ritualfnd knowledge 👇\nhttps://marvellgregory.github.io/ritual-sage/\n\n#RitualNetwork #OnchainAI #Web3 #TheRitualSage`;
 }
 
 function shareOnX(){
   const tier=TIERS[state.currentTier];
   const total=getTierQuestions(state.currentTier).length;
-  const msg=buildShareMsg(tier,state.score,total);
-  const url=`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`;
-  window.open(url,'_blank');
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(buildShareMsg(tier,state.score,total))}`,'_blank');
 }
 
 function shareChampion(){
   const handle=state.xHandle?`@${state.xHandle}`:'I';
-  const msg=`🌟 ${handle} just became a GRAND RITUALIST on The Ritual Sage!\n\nAll 4 tiers complete. True onchain AI knowledge unlocked.\n\nThink you can match it? Try @ritualfnd's ultimate quiz 👇\nritual-sage.github.io\n\n#RitualNetwork #GrandRitualist #OnchainAI #TheRitualSage`;
+  const msg=`🌟 ${handle} just became a GRAND RITUALIST on The Ritual Sage!\n\nAll 4 tiers complete. True onchain AI knowledge unlocked.\n\nThink you can match it? Try @ritualfnd's ultimate quiz 👇\nhttps://marvellgregory.github.io/ritual-sage/\n\n#RitualNetwork #GrandRitualist #OnchainAI #TheRitualSage`;
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
-// ═══════════════════════════════════════════
-// REAL CONTRACT MINTING — Ritual Chain Testnet
-// Contract: 0x91C21715Aea828c6EB05C7220C20512f97262918
-// ═══════════════════════════════════════════
-const CONTRACT_ADDRESS = '0x999c41a582708522A7651B70Cb0ad310E385108f';
-const RITUAL_CHAIN_ID = '0x7BB'; // 1979 in hex
-const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
+// Certificate download
+function downloadCert(){
+  const el=document.getElementById('cert-downloadable');
+  html2canvas(el,{backgroundColor:'#03040f',scale:2}).then(canvas=>{
+    const a=document.createElement('a');
+    a.download=`RitualSage-${TIERS[state.currentTier].name.replace(' ','-')}-Certificate.png`;
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    showToast('Certificate downloaded! ✓');
+  }).catch(()=>showToast('Download ready — use screenshot as backup'));
+}
 
-const MINT_ABI = [
-  {
-    "inputs":[{"internalType":"uint256","name":"tierId","type":"uint256"}],
-    "name":"mint",
-    "outputs":[],
-    "stateMutability":"nonpayable",
-    "type":"function"
-  },
-  {
-    "inputs":[
-      {"internalType":"address","name":"user","type":"address"},
-      {"internalType":"uint256","name":"tierId","type":"uint256"}
-    ],
-    "name":"checkMinted",
-    "outputs":[{"internalType":"bool","name":"","type":"bool"}],
-    "stateMutability":"view",
-    "type":"function"
-  },
-  {
-    "inputs":[
-      {"internalType":"address","name":"","type":"address"},
-      {"internalType":"uint256","name":"","type":"uint256"}
-    ],
-    "name":"hasMinted",
-    "outputs":[{"internalType":"bool","name":"","type":"bool"}],
-    "stateMutability":"view",
-    "type":"function"
-  }
-];
+function downloadGrandCert(){
+  const el=document.getElementById('grand-cert-downloadable');
+  html2canvas(el,{backgroundColor:'#03040f',scale:2}).then(canvas=>{
+    const a=document.createElement('a');
+    a.download='RitualSage-GrandRitualist-Certificate.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    showToast('Grand Certificate downloaded! 🌟');
+  }).catch(()=>showToast('Download ready — use screenshot as backup'));
+}
+
+function showChampion(){
+  document.getElementById('champ-name').textContent=state.displayName;
+  document.getElementById('champ-date').textContent=`Grand Ritualist · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`;
+  showScreen('screen-champion');
+
+  // Big celebration
+  setTimeout(()=>{
+    confetti({particleCount:200,spread:120,origin:{y:0.5},colors:['#ffc82c','#00f5a0','#b47fff','#fff']});
+    setTimeout(()=>confetti({particleCount:150,spread:100,origin:{y:0.4},angle:60,colors:['#00b4ff','#ffc82c']}),600);
+    setTimeout(()=>confetti({particleCount:150,spread:100,origin:{y:0.4},angle:120,colors:['#00f5a0','#b47fff']}),1200);
+  },400);
+
+  // Grand Ritualist announcement
+  document.getElementById('ann-emoji').textContent='🌟';
+  document.getElementById('ann-title').textContent='GRAND RITUALIST!';
+  document.getElementById('ann-name').textContent=state.displayName;
+  document.getElementById('ann-sub').textContent='You have completed ALL 4 tiers and proven yourself a True Grand Ritualist of the Ritual Ecosystem. The onchain world salutes you, champion.';
+  setTimeout(()=>document.getElementById('announce-overlay').classList.add('show'),1500);
+}
+
+function nextTier(){beginTier(state.currentTier+1)}
+function retryTier(){beginTier(state.currentTier)}
+function goHome(){showScreen('screen-cockpit')}
+
+// ═══════════════════════════════════════════
+// MINTING — Ritual Chain
+// ═══════════════════════════════════════════
+const CONTRACT_ADDRESS='0xF84ba30f4c7340e7F5285e6405D60576C7fC9c43';
+const RITUAL_CHAIN_ID='0x7BB'; // 1979 decimal = Ritual Chain
+const RITUAL_RPC='https://rpc.ritualfoundation.org';
+
+const MINT_ABI=[{inputs:[{internalType:"uint256",name:"tierId",type:"uint256"}],name:"mint",outputs:[],stateMutability:"nonpayable",type:"function"}];
 
 function encodeMintCall(tierId){
-  // keccak256("mint(uint256)") = 0x1249c58b, then pad tierId to 32 bytes
-  const sig = '0x1249c58b';
-  const padded = tierId.toString(16).padStart(64,'0');
-  return sig + padded;
+  return '0x1249c58b'+tierId.toString(16).padStart(64,'0');
 }
 
 async function switchToRitual(){
   try{
-    await window.ethereum.request({
-      method:'wallet_switchEthereumChain',
-      params:[{chainId: RITUAL_CHAIN_ID}]
-    });
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN_ID}]});
     return true;
   }catch(switchErr){
-    // Chain not added yet — add it
     if(switchErr.code===4902){
       try{
-        await window.ethereum.request({
-          method:'wallet_addEthereumChain',
-          params:[{
-            chainId: RITUAL_CHAIN_ID,
-            chainName: 'Ritual Chain',
-            nativeCurrency:{name:'RITUAL',symbol:'RITUAL',decimals:18},
-            rpcUrls:[RITUAL_RPC],
-            blockExplorerUrls:['https://explorer.ritualfoundation.org']
-          }]
-        });
+        await window.ethereum.request({method:'wallet_addEthereumChain',params:[{
+          chainId:RITUAL_CHAIN_ID,chainName:'Ritual Chain',
+          nativeCurrency:{name:'RITUAL',symbol:'RITUAL',decimals:18},
+          rpcUrls:[RITUAL_RPC],
+          blockExplorerUrls:['https://explorer.ritualfoundation.org']
+        }]});
         return true;
-      }catch(addErr){
-        showToast('Could not add Ritual Chain to wallet');
-        return false;
-      }
+      }catch(e){showToast('Could not add Ritual Chain to wallet');return false;}
     }
     showToast('Please switch to Ritual Chain in your wallet');
     return false;
@@ -930,143 +1889,62 @@ async function switchToRitual(){
 }
 
 async function mintCert(){
-  if(!state.walletAddr){
-    showToast('Connect your wallet first to mint!');
-    return;
-  }
-  const tier = TIERS[state.currentTier];
-  const tierId = state.currentTier + 1; // 1-indexed
-
-  showToast(`${tier.icon} Preparing to mint ${tier.name} POAP...`);
-
+  if(!state.walletAddr){showToast('Connect your wallet first!');return;}
+  const tier=TIERS[state.currentTier];
+  const tierId=state.currentTier+1;
+  showToast(`${tier.icon} Minting ${tier.name} POAP on Ritual Chain...`);
   try{
-    // Switch to Ritual Chain
-    const switched = await switchToRitual();
+    const switched=await switchToRitual();
     if(!switched) return;
-
-    // Send mint transaction
-    const data = encodeMintCall(tierId);
-    const txHash = await window.ethereum.request({
+    showToast('Confirm the transaction in your wallet...');
+    const txHash=await window.ethereum.request({
       method:'eth_sendTransaction',
-      params:[{
-        from: state.walletAddr,
-        to: CONTRACT_ADDRESS,
-        data: data,
-        gas: '0x30D40' // 200000 gas
-      }]
+      params:[{from:state.walletAddr,to:CONTRACT_ADDRESS,data:encodeMintCall(tierId),gas:'0x30D40'}]
     });
-
-    showToast(`${tier.icon} Minting ${tier.name} POAP! Tx: ${txHash.slice(0,10)}...`);
-
-    // Open explorer after short delay
-    setTimeout(()=>{
-      const explorerUrl = `https://explorer.ritualfoundation.org/tx/${txHash}`;
-      const confirmed = confirm(`✅ ${tier.name} POAP minted!\n\nView on Ritual Explorer?\n${txHash.slice(0,20)}...`);
-      if(confirmed) window.open(explorerUrl, '_blank');
-    }, 2000);
-
+    showToast(`✅ ${tier.icon} POAP submitted! TX: ${txHash.slice(0,14)}...`);
+    await new Promise(r=>setTimeout(r,2500));
+    const explorerUrl=`https://explorer.ritualfoundation.org/tx/${txHash}`;
+    const viewIt=confirm(`🎉 ${tier.name} POAP mint sent!\n\nTX: ${txHash.slice(0,22)}...\n\n✅ NFT will appear in your wallet shortly.\n📌 If image is blank, update the contract metadata (see setup guide).\n\nOpen on Ritual Explorer?`);
+    if(viewIt) window.open(explorerUrl,'_blank');
+    addPoints(25,'⬡ POAP minted — '+tier.name);
   }catch(err){
     if(err.code===4001){
-      showToast('Mint cancelled by user');
-    } else if(err.message && err.message.includes('Already minted')){
-      showToast(`You already minted this ${tier.name} POAP! Each tier is mintable once.`);
-    } else {
-      showToast(`Mint error: ${err.message ? err.message.slice(0,60) : 'Unknown error'}`);
+      showToast('Mint cancelled');
+    }else if(err.message&&err.message.includes('insufficient funds')){
+      showToast('Need testnet tokens! Visit faucet.ritualfoundation.org');
+    }else{
+      showToast(`Mint error: ${err.message?err.message.slice(0,80):'Check wallet & try again'}`);
     }
   }
 }
 
 async function mintChampion(){
-  if(!state.walletAddr){
-    showToast('Connect your wallet first to mint!');
-    return;
-  }
-  const tierId = 4; // Grand Ritualist = tier 4
-  showToast('🌟 Preparing Grand Ritualist POAP mint...');
-
-  try{
-    const switched = await switchToRitual();
-    if(!switched) return;
-
-    const data = encodeMintCall(tierId);
-    const txHash = await window.ethereum.request({
-      method:'eth_sendTransaction',
-      params:[{
-        from: state.walletAddr,
-        to: CONTRACT_ADDRESS,
-        data: data,
-        gas: '0x30D40'
-      }]
-    });
-
-    showToast(`🌟 Grand Ritualist POAP minted! Tx: ${txHash.slice(0,10)}...`);
-
-    setTimeout(()=>{
-      const explorerUrl = `https://explorer.ritualfoundation.org/tx/${txHash}`;
-      const confirmed = confirm(`🌟 GRAND RITUALIST POAP minted!\n\nYou are a true master of Ritual.\nView on Ritual Explorer?\n${txHash.slice(0,20)}...`);
-      if(confirmed) window.open(explorerUrl, '_blank');
-    }, 2000);
-
-  }catch(err){
-    if(err.code===4001){
-      showToast('Mint cancelled by user');
-    } else if(err.message && err.message.includes('Already minted')){
-      showToast('You already minted the Grand Ritualist POAP!');
-    } else {
-      showToast(`Mint error: ${err.message ? err.message.slice(0,60) : 'Unknown error'}`);
-    }
-  }
-}
-
-function nextTier(){
-  beginTier(state.currentTier+1);
-}
-
-function retryTier(){
-  beginTier(state.currentTier);
-}
-
-function showChampion(){
-  document.getElementById('champ-name').textContent=state.displayName;
-  document.getElementById('champ-date').textContent=`Grand Ritualist · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`;
-  showScreen('screen-champion');
-  setTimeout(()=>{
-    confetti({particleCount:200,spread:100,origin:{y:0.5},colors:['#f59e0b','#00ff7f','#a855f7','#fff']});
-  },300);
-}
-
-function goHome(){
-  state.walletAddr && updateWalletUI();
-  showScreen('screen-welcome');
+  if(!state.walletAddr){showToast('Connect your wallet first!');return;}
+  await mintCert.call(this);
 }
 
 // ═══════════════════════════════════════════
-// UTILS
+// SCREEN NAVIGATION
 // ═══════════════════════════════════════════
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  if(id==='screen-checkin'){updateCheckinUI();renderActivityLog();}
+  if(id==='screen-leaderboard'){renderLeaderboard();}
 }
 
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
 let toastTimer;
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
 }
-
-// Auto-detect wallet on load
-window.addEventListener('load',async()=>{
-  if(typeof window.ethereum!=='undefined'){
-    try{
-      const accounts=await window.ethereum.request({method:'eth_accounts'});
-      if(accounts.length>0){state.walletAddr=accounts[0];updateWalletUI();}
-    }catch(e){}
-  }
-});
 </script>
 </body>
 </html>
